@@ -19,6 +19,7 @@ class DispSys:
     size = (320,240)
     self.screen = pygame.display.set_mode(size)
     pygame.display.set_caption("SynOs Disp Experiment 7.12.15")
+    pygame.mixer.quit()
 
   def test(self):
     self.screen.fill((0,0,0))
