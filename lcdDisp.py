@@ -1,6 +1,9 @@
 import os
 import pygame
 import time, random
+#from dispComponents import DLabel
+import dispComponents as comps
+
 
 class DispSys:
   screen = None
@@ -12,7 +15,7 @@ class DispSys:
   RED = (255, 0, 0)
   synthModeTxt = "Hello, Enjoy"
   color = (255,255,255)
-
+  label = None
   def __init__(self):
     os.environ["SDL_FBDEV"]= "/dev/fb1"
     pygame.init()
@@ -20,6 +23,9 @@ class DispSys:
     self.screen = pygame.display.set_mode(size)
     pygame.display.set_caption("SynOs Disp Experiment 7.12.15")
     pygame.mixer.quit()
+    # Label test here
+    self.label = comps.Label(self.screen);
+
 
   def test(self):
     self.screen.fill((0,0,0))
@@ -77,6 +83,7 @@ class DispSys:
     self.synthModeTxt = "SYNTH"
     self.drawTextAt(69,2,txt="SYNTH")
     self.drawRects()
+    self.label.draw();
 
   def drawSequencer(self, seq=0):
     self.screen.fill(self.BLACK)
