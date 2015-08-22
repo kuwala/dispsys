@@ -1,31 +1,162 @@
 import pygame
+import pygame.gfxdraw
+from math import pi
 
 # My shapes enumerator
 # doodat container thinggy
 class SHAPE:
   SOLID = 0
   OUTLINE = 1
+  CIRCLE = 2
+  TRIANGLE = 3
+  SQUARE = 4
 
-
+FONT = "Calibri"
 class Label:
   def __init__(self, _screen, _x=0,_y=0,_size=16,_txt="test",_color=(255,255,255)):
     self.screen = _screen
     self.pos = [_x,_y]
     self.size = _size
     self.color = _color
-    self.txt = _txt
-    self.updateText(self.txt);
+    self.txt = str(_txt)
+    self.changeText(self.txt);
     
-  def updateText(self, txt):
-    font = pygame.font.SysFont("Calibri", self.size, True, False)
-    self.textSurf = font.render(txt, True, self.color)
+  def updateText(self):
+    font = pygame.font.SysFont(FONT, self.size, True, False)
+    self.textSurf = font.render(str(self.txt), True, self.color)
 
+  def changeText(self, _txt):
+    self.txt = _txt
+    self.updateText()
+  def changeColor(self, _color):
+    self.color = _color
+    self.updateText()
   def draw(self):
     self.screen.blit(self.textSurf, self.pos);
 
 class Button:
-  shape = SHAPE.SOLID
-  def __init__(self, _screen, _pos=[0,0], _size=16, color=(255,255,255)):
+  shape = SHAPE.CIRCLE
+  fill = SHAPE.OUTLINE
+  def __init__(self, _screen, _pos=[0,0], _size=32, _color=(255,0,0)):
     self.screen = _screen
+    self.pos   = _pos
+    self.size  = _size
+    self.color = _color
+
+  # No Error Checking on these eeeek !
+  def changeShape(self, _shape):
+    self.shape = _shape
+  def changeFill(self, _fill):
+    self.fill = _fill
+  def changePos(self, _pos):
     self.pos = _pos
+  def changeColor(self, _color):
+    self.color = _color
+
+  def draw(self):
+    if ( self.shape == SHAPE.CIRCLE ) :
+      if ( self.fill == SHAPE.SOLID ) :
+        pygame.draw.circle(self.screen, self.color, self.pos, self.size, 0)
+      else :
+        x = self.pos[0]
+        y = self.pos[1]
+        gap = self.size / 2
+        #arcRect = ( (x - gap, y - gap), (x + gap, y - gap), (x + gap, y + gap), (x - gap, y + gap) ) 
+        arcRect = pygame.Rect(x - gap, y - gap, self.size, self.size)
+        #pygame.draw.arc(self.screen, self.color, arcRect, 0, 2*pi, 2)
+        #pygame.gfxdraw.arc(self.screen, x, y, self.size, 0, 2*pi, self.color )
+        pygame.gfxdraw.circle(self.screen, x, y, self.size, self.color)
+    else :
+      x = self.pos[0]
+      y = self.pos[1]
+      # my weird triangle
+      # Probably replace with a sprite ??
+      x = x - 16
+      pad = 4
+      pointList = ( (x + pad, y) , (x + 32 - pad, y + 16), (x + pad, y + 32) )
+      pygame.draw.polygon(self.screen, self.color, pointList, 0)
+
+class SeqModule:
+  def __init__(self, screen):
+    self.screen = screen
+
+    # display title
+    text = "SEQUENCER"
+    self.titleLabel = Label(self.screen,4,2,72,text)
     
+    # display Step Text
+    step = 11
+    sx = 64
+    sy = 32
+    ss = 288 # step size
+    self.stepLabel = Label(self.screen, sx, sy, ss, step) 
+
+    # display buttons
+    rx = 32
+    ry = 96
+    rs = 16
+    # Color here ??
+    self.recButton = Button(self.screen, [rx, ry], rs)
+    self.recButton.changeFill(SHAPE.SOLID)
+
+    # Play Button
+    px = 32
+    py = 142
+    ps = 16
+    self.playButton = Button(self.screen, [px, py], ps)
+    self.playButton.changeShape(SHAPE.TRIANGLE)
+
+    # display duration param
+    dx = 16
+    dy = 204
+    ds = 32   # font size
+    dur = 250 # duration text
+    self.durLabel = Label(self.screen, dx, dy, ds, dur)
+  def update(self, path, args):
+    if (len(args) > 2) :
+      state = args[0]
+      step = args[1]
+      dur = args[2]
+    else :
+      state = "i"
+      step = -1
+      dur = 123
+    
+    white = (255,255,255)
+    red = (255,0,0)
+    blue = (0,0,255)
+
+    # Update Button Colors
+    if (state == "i") :
+      self.playButton.changeColor(white)
+      self.recButton.changeColor(white)
+      self.stepLabel.changeColor(white)
+    elif (state == "p") :
+      self.playButton.changeColor(blue)
+      self.recButton.changeColor(white)
+      self.stepLabel.changeColor(white)
+    elif (state == "r") :
+      self.playButton.changeColor(white)
+      self.recButton.changeColor(red)
+      self.stepLabel.changeColor(red)
+
+    # Update values
+    self.stepLabel.changeText(step)
+    self.durLabel.changeText(dur)
+
+
+    # root note shift param
+    # octave shift
+  def draw(self):
+    # clear screen
+    self.screen.fill((0,0,0))
+    # draw each of the Components
+    self.titleLabel.draw()
+    self.stepLabel.draw()
+    self.recButton.draw()
+    self.playButton.draw()
+    self.durLabel.draw()
+  def input(self, note, state):
+    # update 
+    pass
+

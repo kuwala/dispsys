@@ -1,23 +1,32 @@
+# DispSys for SynthOS - Daanniieell
+# this is the main app file. Run this !!
+# python dispSys.py
+# you may need sudo to access the FrameBuffer ??
+# it has the game loop and the application
+#
+# imports the OSC Server wich passes data to the 
+# syntState wich is the model
+
 import pygame, os
 import time, random
 
-# my modules
+# my code modules
 from lcdDisp import DispSys
 from oscServ import oscServerGuy
 from models import synthState
 
     
-# Creat the Objects and Start the ~Game
-dispsys = DispSys()
-dispsys.test()
-clock = pygame.time.Clock()
+# Create state obj
+state = synthState()
 
 # Create the oscServer
-
-
-stateText = "start"
-state = synthState()
 oscServer = oscServerGuy(state)
+
+# Creat the Objects and Start the ~Game
+dispsys = DispSys()
+dispsys.setState(state)
+dispsys.drawHello()
+clock = pygame.time.Clock()
 
 done = False
 clock = pygame.time.Clock()
@@ -31,7 +40,7 @@ while not done:
       done = True
     if event.type == pygame.MOUSEBUTTONUP:
       #done = True
-      dunce = "troll"
+      pass
     if event.type == pygame.KEYDOWN:
       if event.key == pygame.K_s:
         dispsys.drawSynth()
@@ -45,28 +54,16 @@ while not done:
         dispsys.drawGrid(16)
       elif event.key == pygame.K_q:
         dispsys.drawSequencer()
+      elif event.key == pygame.K_w:
+        dispsys.testNewSeq()
       elif event.key == pygame.K_ESCAPE:
         done = True
 
-  # LOGIC LOGIC
-  if state.fresh == "hot":
-    if state.txt == "/d":
-      dispsys.drawDrums()
-    elif state.txt == "/s":
-      dispsys.drawSynth()
-    elif state.txt == "/q":
-      dispsys.drawSequencer()
-    state.setCold()
 
-  #if counter > 100:
-  #  counter = 0
-  #  if miniState % 2 == 0:
-  #    dispsys.drawSynth()
-  #  else :
-  #    dispsys.drawDrums()
-  #  miniState +=1
-
+  # Does Logic & Routes Input
   dispsys.update()
+
+  dispsys.drawScreen()
   clock.tick(50)
   #counter += 1
 

@@ -1,1 +1,2 @@
 python dispSys.py
+pause

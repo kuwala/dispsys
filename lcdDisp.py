@@ -1,7 +1,16 @@
+# The Display Modules Manager System
+# Uses pygame as the display library
+# displays to /dev/fb1
+#
+# It creates the Modules for
+# Synth, Seq, Drum ...
+# Essentially the controller ??
+# Maybe also Routes input
+
 import os
 import pygame
 import time, random
-#from dispComponents import DLabel
+# from dispComponents import DLabel
 import dispComponents as comps
 
 
@@ -16,6 +25,7 @@ class DispSys:
   synthModeTxt = "Hello, Enjoy"
   color = (255,255,255)
   label = None
+  seqMod = None
   def __init__(self):
     os.environ["SDL_FBDEV"]= "/dev/fb1"
     pygame.init()
@@ -23,18 +33,46 @@ class DispSys:
     self.screen = pygame.display.set_mode(size)
     pygame.display.set_caption("SynOs Disp Experiment 7.12.15")
     pygame.mixer.quit()
-    # Label test here
-    self.label = comps.Label(self.screen);
+    
+    # Components test here
+    self.label = comps.Label(self.screen)
+    self.seqMod = comps.SeqModule(self.screen)
 
+  def setState(self, state):
+    self.state = state
 
-  def test(self):
+  def testNewSeq(self):
+    path = "/q"
+    args = [ "r", 14, 250]
+    
+    self.seqMod.update(path,args)
+    self.seqMod.draw()
+  def drawNewSequencer(self):
+    self.seqMod.update(self.state.path, self.state.args)
+    self.seqMod.draw()
+
+  def update(self):
+    # set which Module is active
+    # and update that Module
+
+    # LOGIC LOGIC
+    if self.state.fresh == "hot":
+      if self.state.txt == "/d":
+        self.drawDrums()
+      elif self.state.txt == "/s":
+        self.drawSynth()
+      elif self.state.txt == "/q":
+        self.drawNewSequencer()
+      self.state.setCold()
+
+  def drawHello(self):
     self.screen.fill((0,0,0))
     # draw stuff here
     font = pygame.font.SysFont('Calibri', 72, True, False)
     textSurf = font.render(self.synthModeTxt, True, self.color)
     self.screen.blit(textSurf, [20,20])
 
-  def update(self):
+  def drawScreen(self):
     # update the display
     pygame.display.update()
 
@@ -97,6 +135,7 @@ class DispSys:
     self.drawSeqNum(seq)
     dur = 250
     self.drawSeqDur(dur)
+    print("danny");
 
   def drawSeqNum(self, seq=12):
     text = str(seq)
@@ -148,6 +187,9 @@ class DispSys:
     triangle = ( ( px + pad , py  ), ( px + 32 - pad, py + 16 ), ( px + pad , py + 32 ) )
 
     pygame.draw.polygon(self.screen, color, triangle)
+
+    button = comps.Button(self.screen, (132,196))
+    button.draw()
 
 
   def drawRects(self):

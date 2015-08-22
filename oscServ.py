@@ -18,8 +18,9 @@ class oscServerGuy(object):
     self.oscServerThread = threading.Thread( target = self.oscServer.serve_forever )
     self.oscServerThread.start()
   def callBack(self, path, tags, args, source):
-    self.state.receive(path)
+    self.state.receive(path, tags, args)
     self.state.setHot()
+    print(args);
   def close(self):
     self.oscServer.close()
     self.oscServerThread.join()
