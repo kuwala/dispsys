@@ -56,11 +56,14 @@ while not done:
         dispsys.drawSequencer()
       elif event.key == pygame.K_w:
         dispsys.testNewSeq()
+      elif event.key == pygame.K_v:
+        dispsys.visModTest()
       elif event.key == pygame.K_ESCAPE:
         done = True
 
 
   # Does Logic & Routes Input
+  #dispsys.visModTest()
   dispsys.update()
 
   dispsys.drawScreen()

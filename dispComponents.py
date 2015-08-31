@@ -1,6 +1,6 @@
 import pygame
 import pygame.gfxdraw
-from math import pi
+import math
 
 # My shapes enumerator
 # doodat container thinggy
@@ -75,6 +75,105 @@ class Button:
       pad = 4
       pointList = ( (x + pad, y) , (x + 32 - pad, y + 16), (x + pad, y + 32) )
       pygame.draw.polygon(self.screen, self.color, pointList, 0)
+
+class funcGraph:
+  def __init__(self, screen, x , y ):
+    self.screen = screen
+    self.x = x
+    self.y = y
+    self.w = 240
+    self.h = 92
+    self.a = 32
+    self.xStep = math.pi / 64
+    self.bgColor = (25,25,25)
+    self.lineColor = (220,220,255)
+    self.surf = pygame.Surface((self.w, self.h))
+    # Optional
+    self.ys = [] # array of Y values
+    self.numXPoints = 6
+    # Angle for grpha animation
+    self.gAngle = 0
+    self.gAngleRate = 0.08
+    self.fillArray()
+
+  def drawSin(self):
+    lastX = self.x
+    lastY = self.y + self.h/2
+    # Draw the bg First
+    pygame.draw.rect(self.screen, self.bgColor, (self.x, self.y, self.w, self.h))
+    # Draw the line segment between two points at a time
+    for i in range(self.w):
+      # y = sin(x)
+      pointY = math.sin(i * self.xStep) * self.a
+      # Calculate graph offset
+      # So that its centered veritcally
+      
+      newX = self.x + i
+      newY = self.y+ self.h/2 + pointY
+      pygame.draw.line(self.screen, self.lineColor, (lastX, lastY), (newX, newY) )
+      lastX = newX
+      lastY = newY
+      #print pointY
+    #blit surf to screen
+    #self.surf.blit(self.screen, (0,0))
+
+  def drawBG(self):
+    pygame.draw.rect(self.screen, self.bgColor, (self.x, self.y, self.w, self.h))
+
+  def drawBallSin(self):
+    self.drawBG()
+    offX = self.x
+    offY = self.y + self.h / 2
+    r= 4
+    length = len(self.ys)
+    xBalls = length / self.numXPoints
+    rate = length / xBalls
+    for i in range(xBalls):
+      xPoint = i*rate + offX 
+      yPoint = self.ys[i*rate] + offY
+      #pygame.draw.circle(self.screen, self.lineColor, (int(xPoint), int(yPoint)), r)
+      pygame.gfxdraw.filled_circle(self.screen, int(xPoint), int(yPoint), int(r), self.lineColor)
+    #for i , yPoint in enumerate(self.ys):
+    #  xPoint = int(i) + offX 
+    #  yPoint = yPoint + offY
+    #  pygame.draw.circle(self.screen, self.lineColor, (xPoint, int(yPoint)), 4)
+
+  def drawPoints(self):
+    # fill array with y values
+    # draw 
+    pass
+
+  def fillArray(self):
+    self.ys = [] 
+    stepSize = math.pi / 96
+    amp = 32
+    for s in range(self.w):
+      self.ys.append(math.sin(s * stepSize + self.gAngle) * amp )
+  def updateAngle(self):
+    self.gAngle = self.gAngle + self.gAngleRate
+  def draw(self):
+    self.updateAngle()
+    self.fillArray()
+    self.drawBallSin()
+
+    
+
+
+class visModule:
+  def __init__(self, screen):
+    self.screen = screen
+    text = "Vis av Vive"
+    self.titleLabel = Label(self.screen,4,2,72,text)
+    self.graph = funcGraph(self.screen,40,72)
+  def update(self, path, args):
+    pass
+  def draw(self):
+    self.screen.fill((0,0,0))
+    self.titleLabel.draw()
+    self.graph.updateAngle()
+    self.graph.draw()
+
+
 
 class SeqModule:
   def __init__(self, screen):

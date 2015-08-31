@@ -37,6 +37,10 @@ class DispSys:
     # Components test here
     self.label = comps.Label(self.screen)
     self.seqMod = comps.SeqModule(self.screen)
+    self.visMod = comps.visModule(self.screen)
+  def visModTest(self):
+    self.visMod.draw()
+
 
   def setState(self, state):
     self.state = state
