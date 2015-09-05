@@ -82,8 +82,8 @@ class funcGraph:
     self.x = x
     self.y = y
     self.w = 240
-    self.h = 92
-    self.a = 32
+    self.h = 160
+    self.a = 72
     self.xStep = math.pi / 64
     self.bgColor = (25,25,25)
     self.lineColor = (220,220,255)
@@ -93,7 +93,7 @@ class funcGraph:
     self.numXPoints = 6
     # Angle for grpha animation
     self.gAngle = 0
-    self.gAngleRate = 0.08
+    self.gAngleRate = 0.02
     self.fillArray()
 
   def drawSin(self):
@@ -146,7 +146,7 @@ class funcGraph:
   def fillArray(self):
     self.ys = [] 
     stepSize = math.pi / 96
-    amp = 32
+    amp = self.a
     for s in range(self.w):
       self.ys.append(math.sin(s * stepSize + self.gAngle) * amp )
   def updateAngle(self):
