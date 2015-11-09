@@ -1,6 +1,7 @@
 import pygame
 import pygame.gfxdraw
 import math
+import os
 
 # My shapes enumerator
 # doodat container thinggy
@@ -10,6 +11,10 @@ class SHAPE:
   CIRCLE = 2
   TRIANGLE = 3
   SQUARE = 4
+class COLOR:
+  WHITE = (255,255,255)
+  BLUE = (0,108,255)
+  RED = (255,24,108)
 
 FONT = "Calibri"
 class Label:
@@ -75,7 +80,49 @@ class Button:
       pad = 4
       pointList = ( (x + pad, y) , (x + 32 - pad, y + 16), (x + pad, y + 32) )
       pygame.draw.polygon(self.screen, self.color, pointList, 0)
+class Sprite:
+  def __init__(self, screen, x, y, fileName='shark14x9.png'):
+    self.screen = screen
+    self.x = x
+    self.y = y
+    folder = 'assets'
+    file = fileName
+    
+    tempSurface = pygame.image.load(os.path.join(folder, file)).convert()
+    w = tempSurface.get_width()
+    h = tempSurface.get_height()
+    scale = 3
+    self.surface2 = pygame.transform.scale(tempSurface, (w * scale, h * scale))
+    # Possible speed increase
+    # self.surface = pygame.image.load(os.path.join(folder, file)).convert()
 
+  def changePos(self, x, y):
+    self.x = x
+    self.y = y
+  def draw(self):
+    self.screen.blit(self.surface2, (self.x,self.y))
+    
+    
+
+class ProgressBar:
+  def __init__(self, screen, x, y):
+    self.screen = screen
+    self.x = x
+    self.y = y
+    self.w = 128
+    self.h = 4
+    self.percentAt = .001
+    self.color = (255,255,255)
+    self.colorAt = COLOR.BLUE
+  def changePercent(self, per):
+    self.percentAt = per
+  def draw(self):
+    # draw bg line
+    pygame.gfxdraw.box(self.screen, [self.x, self.y, self.w, self.h], self.color)
+    # draw percentAt line
+    widthAt = self.w * self.percentAt
+    pygame.gfxdraw.box(self.screen, [self.x, self.y, widthAt, self.h], self.colorAt)
+    
 class funcGraph:
   def __init__(self, screen, x , y ):
     self.screen = screen

@@ -12,9 +12,10 @@ import pygame
 import time, random
 # from dispComponents import DLabel
 import dispComponents as comps
+import recMod
 
 
-class DispSys:
+class LcdDisp:
   screen = None
   WHITE = (255, 255, 255)
   BLUE = (0, 0, 255)
@@ -38,6 +39,9 @@ class DispSys:
     self.label = comps.Label(self.screen)
     self.seqMod = comps.SeqModule(self.screen)
     self.visMod = comps.visModule(self.screen)
+
+    # Modules go here
+    self.recMod = recMod.RecModule(self.screen)
   def visModTest(self):
     self.visMod.draw()
 
@@ -54,6 +58,9 @@ class DispSys:
   def drawNewSequencer(self):
     self.seqMod.update(self.state.path, self.state.args)
     self.seqMod.draw()
+
+  def drawRecMod(self):
+    self.recMod.draw()
 
   def update(self):
     # set which Module is active

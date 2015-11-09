@@ -11,7 +11,7 @@ import pygame, os
 import time, random
 
 # my code modules
-from lcdDisp import DispSys
+from lcdDisp import LcdDisp
 from oscServ import oscServerGuy
 from models import synthState
 
@@ -23,7 +23,7 @@ state = synthState()
 oscServer = oscServerGuy(state)
 
 # Creat the Objects and Start the ~Game
-dispsys = DispSys()
+dispsys = LcdDisp()
 dispsys.setState(state)
 dispsys.drawHello()
 clock = pygame.time.Clock()
@@ -56,6 +56,9 @@ while not done:
         dispsys.drawSequencer()
       elif event.key == pygame.K_w:
         dispsys.testNewSeq()
+      elif event.key == pygame.K_r:
+        dispsys.recMod.randomPercent()
+        dispsys.drawRecMod()
       elif event.key == pygame.K_v:
         dispsys.visModTest()
       elif event.key == pygame.K_ESCAPE:
