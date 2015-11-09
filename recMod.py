@@ -3,7 +3,8 @@ import random
 class RecModule:
   def __init__(self, screen):
     self.screen = screen
-    self.state = 'stop'
+    # s - stop, p - play, r = record
+    self.state = 's'
     # Record Title
     text = "Record"
     self.titleLabel = comps.Label(self.screen, 4,2,72,text)
@@ -29,19 +30,23 @@ class RecModule:
     self.bpmLabel = comps.Label(self.screen, bpmx, bpmy, bpms, bpmText)
     # BPM Animation
     self.bpmSprite = comps.Sprite(self.screen, 266, 60, 'train14x10.png')
-  def update(self, path, args):
-    # if play
-    # change button color
-    self.playButton.changeColor(comps.COLOR.BLUE)
-    # if rec
-      # change color
-    self.playButton.changeColor(comps.COLOR.RED)
-    # if stop
-      # change color
-    self.playButton.changeColor(comps.COLOR.WHITE)
+  def update(self, args):
+    if(len(args) > 1):
+      self.state = args[0]
+      self.percentAt = args[1]
+    else :
+      self.state = 's'
+      self.percentAt = .5
+    if (self.state == 's'):
+      self.playButton.changeColor(comps.COLOR.BLUE)
+    elif (self.state == 'r'):
+      self.playButton.changeColor(comps.COLOR.RED)
+    elif (self.state == 'p'):
+      self.playButton.changeColor(comps.COLOR.WHITE)
 
     # update percentAt
-    pass
+    self.progressBar.changePercent(self.percentAt)
+
   def randomPercent(self):
     per = random.random()
     self.progressBar.changePercent(per)

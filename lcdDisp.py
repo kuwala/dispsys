@@ -62,6 +62,10 @@ class LcdDisp:
   def drawRecMod(self):
     self.recMod.draw()
 
+  def drawRecorder(self):
+    self.recMod.update(self.state.args)
+    self.recMod.draw()
+
   def update(self):
     # set which Module is active
     # and update that Module
@@ -74,6 +78,8 @@ class LcdDisp:
         self.drawSynth()
       elif self.state.txt == "/q":
         self.drawNewSequencer()
+      elif self.state.txt == "/r":
+        self.drawRecorder()
       self.state.setCold()
 
   def drawHello(self):
