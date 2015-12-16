@@ -105,17 +105,19 @@ class Sprite:
     
 
 class ProgressBar:
-  def __init__(self, screen, x, y):
+  def __init__(self, screen, x, y, w = 128, h = 4):
     self.screen = screen
     self.x = x
     self.y = y
-    self.w = 128
-    self.h = 4
+    self.w = w
+    self.h = h
     self.percentAt = .001
     self.color = (255,255,255)
     self.colorAt = COLOR.BLUE
   def changePercent(self, per):
     self.percentAt = per
+  def changeColor(self, color):
+    self.colorAt = color
   def draw(self):
     # draw bg line
     pygame.gfxdraw.box(self.screen, [self.x, self.y, self.w, self.h], self.color)

@@ -6,30 +6,32 @@ class RecModule:
     # s - stop, p - play, r = record
     self.state = 's'
     # Record Title
-    text = "Record"
-    self.titleLabel = comps.Label(self.screen, 4,2,72,text)
+    text = "REC"
+    self.titleLabel = comps.Label(self.screen, 102,2,72,text)
     # Play / Rec Button
     px = 32 + 16
     py = 96
     ps = 16
 
     self.playButton = comps.Button(self.screen, [px, py], ps)
-    self.playButton.changeFill(comps.SHAPE.SOLID)
+    self.playButton.changeFill(comps.SHAPE.OUTLINE)
     self.playButton.changeShape(comps.SHAPE.TRIANGLE)
     self.playButton.changeColor(comps.COLOR.WHITE)
     
     # Progress Bar
-    pbx = 96
-    pby = 152
-    self.progressBar = comps.ProgressBar(self.screen, pbx, pby)
+    pbx = 32
+    pby = 192
+    pbw = 256
+    pbh = 8
+    self.progressBar = comps.ProgressBar(self.screen, pbx, pby, pbw, pbh)
     # BPM Label
-    bpmx = 256
+    bpmx = 228
     bpmy = 96
     bpms = 38
     bpmText = "100"
     self.bpmLabel = comps.Label(self.screen, bpmx, bpmy, bpms, bpmText)
     # BPM Animation
-    self.bpmSprite = comps.Sprite(self.screen, 266, 60, 'train14x10.png')
+    # self.bpmSprite = comps.Sprite(self.screen, 266, 60, 'train14x10.png')
   def update(self, args):
     if(len(args) > 1):
       self.state = args[0]
@@ -38,11 +40,17 @@ class RecModule:
       self.state = 's'
       self.percentAt = .5
     if (self.state == 's'):
-      self.playButton.changeColor(comps.COLOR.BLUE)
+      self.playButton.changeColor(comps.COLOR.WHITE)
+      self.progressBar.changeColor(comps.COLOR.BLUE)
+      #self.playButton.changeShape(comps.SHAPE.SQUARE)
     elif (self.state == 'r'):
       self.playButton.changeColor(comps.COLOR.RED)
+      self.progressBar.changeColor(comps.COLOR.RED)
+      #self.playButton.changeShape(comps.SHAPE.CIRCLE)
     elif (self.state == 'p'):
-      self.playButton.changeColor(comps.COLOR.WHITE)
+      self.playButton.changeColor(comps.COLOR.BLUE)
+      self.progressBar.changeColor(comps.COLOR.BLUE)
+      #self.playButton.changeShape(comps.SHAPE.TRIANGLE)
 
     # update percentAt
     self.progressBar.changePercent(self.percentAt)
@@ -56,7 +64,7 @@ class RecModule:
     self.playButton.draw()
     self.bpmLabel.draw()
     self.progressBar.draw()
-    self.bpmSprite.draw()
+    # self.bpmSprite.draw()
 
 '''
  # # # # #   PASTED REFERENCE   # # # # # # 
