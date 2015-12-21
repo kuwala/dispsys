@@ -216,7 +216,6 @@ class LcdDisp:
     self.drawSeqNum(seq)
     dur = 250
     self.drawSeqDur(dur)
-    print("danny");
 
   def drawSeqNum(self, seq=12):
     text = str(seq)

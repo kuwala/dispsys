@@ -14,7 +14,6 @@ class SynthViewController:
     args = savedOSC.args
     if (path =="/s"):
       note = args[0]
-      print("note is %d " % note)
       if note != -1: # make sure its a note and not init signal
         self.synthModel.addNote(note)
       else :
@@ -38,8 +37,6 @@ class SynthViewController:
       self.synthModel.changeParam("ModFreq", args[0])
       self.synthView.updateParamLabel()
       self.synthModel.makeActive()
-    print("osc recieved")
-    print(path)
     # update model
     # update view 
   

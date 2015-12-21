@@ -30,7 +30,6 @@ class oscServerGuy(object):
   def callBack(self, path, tags, args, source):
     self.savedOSC.receive(path, tags, args)
     self.savedOSC.setHot()
-    print(args);
   def close(self):
     self.oscServer.close()
     self.oscServerThread.join()

@@ -61,7 +61,7 @@ class SynthView:
   def updateParamLabel(self):
     self.paramLabel.changeText(self.model.activeParam)
     self.paramValue.changeText(self.model.activeParamValue)
-    print("active param %s and active paramValue %s" % (self.model.activeParam, self.model.activeParamValue) )
+    # print("active param %s and active paramValue %s" % (self.model.activeParam, self.model.activeParamValue) )
 
   def drawRects(self):
     xoff = 0
