@@ -20,6 +20,11 @@ class oscServerGuy(object):
     self.oscServer.addMsgHandler("/d" , self.callBack)
     self.oscServer.addMsgHandler("/q" , self.callBack)
     self.oscServer.addMsgHandler("/r" , self.callBack)
+    self.oscServer.addMsgHandler("/r/play" , self.callBack)
+    self.oscServer.addMsgHandler("/r/record" , self.callBack)
+    self.oscServer.addMsgHandler("/r/stop" , self.callBack)
+    self.oscServer.addMsgHandler("/r/switch" , self.callBack)
+    self.oscServer.addMsgHandler("/t" , self.callBack)
     self.oscServerThread = threading.Thread( target = self.oscServer.serve_forever )
     self.oscServerThread.start()
   def callBack(self, path, tags, args, source):

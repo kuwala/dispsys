@@ -6,7 +6,7 @@ class SynthViewController:
   def CPUTick(self):
     self.synthModel.CPUTick() #current does nothing :'(
     self.synthView.draw()
-    self.synthModel.updateDrawState() # kind of like cpu tcik :'(
+    self.synthModel.updateDrawState() # kind of like cpu tick :'(
   # def recieveOSC(self, path, tags, args):
   def receiveOSC(self, savedOSC):
     # if note is played

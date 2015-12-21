@@ -16,6 +16,7 @@ import recMod
 import synthView
 import SynthModel
 import SynthVC
+import longRecView, longRecModel, longRecController
 
 
 class LcdDisp:
@@ -51,6 +52,11 @@ class LcdDisp:
     self.synthView = synthView.SynthView(self.screen, self.synthModel)
     self.synthController = SynthVC.SynthViewController(self.synthModel, self.synthView)
     self.activeModuleController = self.synthController
+
+    # Long Rec View
+    self.longRecModel = longRecModel.LongRecModel()
+    self.longRecView = longRecView.LongRecView(self.screen, self.longRecModel)
+    self.longRecController = longRecController.LongRecController(self.longRecModel, self.longRecView)
   def visModTest(self):
     self.visMod.draw()
 
@@ -88,8 +94,35 @@ class LcdDisp:
     # send active module a CPU Tick via module.update()
     # each module figures out if module needs to draw
     # based on its own state
-
     
+    # - - - - - -
+    # Route OSC based on first address container
+    # - - - - - -
+    selected = string.split(self.savedOSC.path, "/")[1]
+    # s = synth, d = drums, t = tape, q = synth, r = longRecord
+    if self.savedOSC.fresh == "hot":
+      if selected == "s":
+        self.activeModuleController = self.synthController
+        self.activeModuleController.receiveOSC(self.savedOSC)
+      elif selected == "d":
+        self.drawDrums()
+        self.activeModuleController = None
+      elif selected == "t":
+        self.activeModuleController = None
+        self.updateRecorder()
+        self.drawRecorder()
+      elif selected == "q":
+        self.activeModuleController = None
+        self.updateNewSequencer()
+        self.drawNewSequencer()
+      elif selected == "r":
+        self.activeModuleController = self.longRecController
+        self.longRecController.receiveOSC(self.savedOSC)
+      self.savedOSC.setCold()
+
+    if (self.activeModuleController != None):
+      self.activeModuleController.CPUTick()
+    """
     # route osc -bad
     # - -rename state to saved OSC
     if self.savedOSC.fresh == "hot":
@@ -122,9 +155,7 @@ class LcdDisp:
         self.updateRecorder()
         self.drawRecorder()
       self.savedOSC.setCold()
-
-    if (self.activeModuleController != None):
-      self.activeModuleController.CPUTick()
+    """
 
   def drawHello(self):
     self.screen.fill((0,0,0))

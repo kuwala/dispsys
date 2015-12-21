@@ -6,8 +6,8 @@ class RecModule:
     # s - stop, p - play, r = record
     self.state = 's'
     # Record Title
-    text = "REC"
-    self.titleLabel = comps.Label(self.screen, 102,2,72,text)
+    text = "LOOPER"
+    self.titleLabel = comps.Label(self.screen, 48,2,72,text)
     # Play / Rec Button
     px = 32 + 16
     py = 96

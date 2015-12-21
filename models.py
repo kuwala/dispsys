@@ -5,6 +5,7 @@ class synthState(object):
     self.txt = "/start"
     # fresh = cold || hot
     self.fresh ="cold"
+    self.path = "/start"
   def receive(self, _path, _tags, _args):
     self.txt  = _path
     self.path = _path
