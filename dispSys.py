@@ -11,27 +11,24 @@ import pygame, os
 import time, random
 
 # my code modules
-from lcdDisp import LcdDisp
+from lcdDisp import LcdDisp # RENAME to MODULE MANAGER
 from oscServ import oscServerGuy
 from models import synthState
 
-    
-# Create state obj
-state = synthState()
+# Create OSCContainer obj
+savedOSC = synthState()
 
 # Create the oscServer
-oscServer = oscServerGuy(state)
+oscServer = oscServerGuy(savedOSC)
 
 # Creat the Objects and Start the ~Game
-dispsys = LcdDisp()
-dispsys.setState(state)
-dispsys.drawHello()
+moduleManager = LcdDisp()
+moduleManager.setState(savedOSC)
+moduleManager.drawHello()
 clock = pygame.time.Clock()
 
 done = False
 clock = pygame.time.Clock()
-counter = 0
-miniState = 0
 
 # ~Game Loop
 while not done:
@@ -43,35 +40,37 @@ while not done:
       pass
     if event.type == pygame.KEYDOWN:
       if event.key == pygame.K_s:
-        dispsys.drawSynth()
+        savedOSC.receive("/s", "tags go here", [-1])
+        savedOSC.setHot()
       elif event.key == pygame.K_d:
-        dispsys.drawDrums()
+        savedOSC.receive("/d", "tags go here", [-1])
+        savedOSC.setHot()
+        moduleManager.drawDrums()
       elif event.key == pygame.K_1:
-        dispsys.drawGrid(64)
+        moduleManager.drawGrid(64)
       elif event.key == pygame.K_2:
-        dispsys.drawGrid(32)
+        moduleManager.drawGrid(32)
       elif event.key == pygame.K_3:
-        dispsys.drawGrid(16)
+        moduleManager.drawGrid(16)
       elif event.key == pygame.K_q:
-        dispsys.drawSequencer()
-      elif event.key == pygame.K_w:
-        dispsys.testNewSeq()
+        moduleManager.drawSequencer()
       elif event.key == pygame.K_r:
-        dispsys.recMod.randomPercent()
-        dispsys.drawRecMod()
+        moduleManager.recMod.randomPercent()
+        moduleManager.drawRecMod()
       elif event.key == pygame.K_v:
-        dispsys.visModTest()
+        moduleManager.visModTest()
       elif event.key == pygame.K_ESCAPE:
         done = True
 
 
-  # Does Logic & Routes Input
-  #dispsys.visModTest()
-  dispsys.update()
-
-  dispsys.drawScreen()
+  # Does Logic & Routes Input from state
+  # sends CPU Tick update to active module(s)
+  moduleManager.update()
+  
+  # Draws screen to the Display
+  # with pygame
+  moduleManager.drawScreen()
   clock.tick(50)
-  #counter += 1
 
 print "Closing pygame"
 pygame.quit()

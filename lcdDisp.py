@@ -9,10 +9,13 @@
 
 import os
 import pygame
-import time, random
+import time, random, string
 # from dispComponents import DLabel
 import dispComponents as comps
 import recMod
+import synthView
+import SynthModel
+import SynthVC
 
 
 class LcdDisp:
@@ -25,7 +28,6 @@ class LcdDisp:
   RED = (255, 0, 0)
   synthModeTxt = "Hello, Enjoy"
   color = (255,255,255)
-  label = None
   seqMod = None
   def __init__(self):
     os.environ["SDL_FBDEV"]= "/dev/fb1"
@@ -33,54 +35,96 @@ class LcdDisp:
     size = (320,240)
     self.screen = pygame.display.set_mode(size)
     pygame.display.set_caption("SynOs Disp Experiment 7.12.15")
+    #turn off audio so that pd can grab audio focus
     pygame.mixer.quit()
+    # hide mouse coursor
+    pygame.mouse.set_visible(False)
     
     # Components test here
-    self.label = comps.Label(self.screen)
     self.seqMod = comps.SeqModule(self.screen)
     self.visMod = comps.visModule(self.screen)
 
     # Modules go here
     self.recMod = recMod.RecModule(self.screen)
+
+    self.synthModel = SynthModel.SynthModel()
+    self.synthView = synthView.SynthView(self.screen, self.synthModel)
+    self.synthController = SynthVC.SynthViewController(self.synthModel, self.synthView)
+    self.activeModuleController = self.synthController
   def visModTest(self):
     self.visMod.draw()
 
+  def setState(self, savedOSC):
+    self.savedOSC = savedOSC
 
-  def setState(self, state):
-    self.state = state
-
-  def testNewSeq(self):
-    path = "/q"
-    args = [ "r", 14, 250]
-    
-    self.seqMod.update(path,args)
-    self.seqMod.draw()
+  def updateNewSequencer(self):
+    self.seqMod.update(self.savedOSC.path, self.savedOSC.args)
   def drawNewSequencer(self):
-    self.seqMod.update(self.state.path, self.state.args)
     self.seqMod.draw()
 
   def drawRecMod(self):
     self.recMod.draw()
 
+  def updateRecorder(self):
+    self.recMod.update(self.savedOSC.args)
   def drawRecorder(self):
-    self.recMod.update(self.state.args)
     self.recMod.draw()
 
-  def update(self):
-    # set which Module is active
-    # and update that Module
+  def drawNewSynth(self):
+    self.synthView.draw()
 
-    # LOGIC LOGIC
-    if self.state.fresh == "hot":
-      if self.state.txt == "/d":
+  def updateAndRouteOSC(self, path, tags, args):
+    # if path is synth route to synth
+    if (string.split(path, "/")[1] == "synth"):
+      # update synthModel via synthController
+      pass
+    
+
+  def update(self):
+    # - - - - New Functions - - - - - 
+    # update witch module is active 
+    # based on last OSC recieved
+    # 
+    # send active module a CPU Tick via module.update()
+    # each module figures out if module needs to draw
+    # based on its own state
+
+    
+    # route osc -bad
+    # - -rename state to saved OSC
+    if self.savedOSC.fresh == "hot":
+      if self.savedOSC.txt == "/d":
         self.drawDrums()
-      elif self.state.txt == "/s":
-        self.drawSynth()
-      elif self.state.txt == "/q":
+        self.activeModuleController = None
+      elif self.savedOSC.txt == "/s":
+        self.activeModuleController = self.synthController
+        self.activeModuleController.receiveOSC(self.savedOSC)
+        # self.drawNewSynth()
+        # self.drawSynth()
+      elif self.savedOSC.txt == "/s/k1":
+        self.activeModuleController = self.synthController
+        self.activeModuleController.receiveOSC(self.savedOSC)
+      elif self.savedOSC.txt == "/s/k2":
+        self.activeModuleController = self.synthController
+        self.activeModuleController.receiveOSC(self.savedOSC)
+      elif self.savedOSC.txt == "/s/k3":
+        self.activeModuleController = self.synthController
+        self.activeModuleController.receiveOSC(self.savedOSC)
+      elif self.savedOSC.txt == "/s/k4":
+        self.activeModuleController = self.synthController
+        self.activeModuleController.receiveOSC(self.savedOSC)
+      elif self.savedOSC.txt == "/q":
+        self.activeModuleController = None
+        self.updateNewSequencer()
         self.drawNewSequencer()
-      elif self.state.txt == "/r":
+      elif self.savedOSC.txt == "/r":
+        self.activeModuleController = None
+        self.updateRecorder()
         self.drawRecorder()
-      self.state.setCold()
+      self.savedOSC.setCold()
+
+    if (self.activeModuleController != None):
+      self.activeModuleController.CPUTick()
 
   def drawHello(self):
     self.screen.fill((0,0,0))
@@ -128,18 +172,7 @@ class LcdDisp:
         headColor = self.scaleColor(rcolor, 1.50)
         pygame.draw.ellipse(self.screen, headColor, headRect, 0)
   
-
-
-  def drawSynth(self):
-    #self.screen.fill(self.DGRAY)
-    self.screen.fill(self.BLACK)
-    rect = (0,0, 320, 64)
-    #pygame.draw.rect(self.screen, self.BLACK, rect, 0)
-    self.synthModeTxt = "SYNTH"
-    self.drawTextAt(69,2,txt="SYNTH")
-    self.drawRects()
-    self.label.draw();
-
+  
   def drawSequencer(self, seq=0):
     self.screen.fill(self.BLACK)
     self.synthModeTxt = "SEQUENCER"
@@ -207,20 +240,6 @@ class LcdDisp:
 
     button = comps.Button(self.screen, (132,196))
     button.draw()
-
-
-  def drawRects(self):
-    xoff = 0
-    yoff = 64
-    w = 32
-    h = 32
-    rows = 3
-    cols = 10
-    for ycell in range(rows):
-      for xcell in range(cols):
-        rect =(xoff+ w * xcell, yoff + h * ycell, w, h)
-        rcolor = self.randColor()
-        pygame.draw.rect(self.screen, rcolor, rect, 0)
 
   def scaleColor(self,color, scale):
     newColor = ()
