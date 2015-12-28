@@ -13,15 +13,15 @@ class LongRecModel(object):
       self.drawState = "draw"
   def updateRunTime(self, millisecs):
     # time 
-    """
+    # """
     hundredths = millisecs / 10
     hundredths = hundredths % 100
     secs = millisecs / 1000
     secs = secs % 60
     min = millisecs / 60000
     text = str(min) + ":" + str(secs).zfill(2)+"." + str(hundredths).zfill(2)
-    """
-    text = str(millisecs)
+    # """
+    # text = str(millisecs)
     self.runTime = text
   def makeActive(self):
     self.drawState = "draw"
@@ -37,6 +37,6 @@ class LongRecModel(object):
     if self.ab == "A":
       self.ab = "B"
     else :
-      self.AB = "A"
+      self.ab = "A"
   
   

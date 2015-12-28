@@ -14,7 +14,13 @@ class SHAPE:
 class COLOR:
   WHITE = (255,255,255)
   BLUE = (0,108,255)
+  DARKBLUE = (0, 54, 127)
   RED = (255,24,108)
+  GRAY = (100,100,100)
+class STATE:
+  LIGHT = 0
+  DIM = 1
+  IDLE = 2
 
 FONT = "Calibri"
 class Label:
@@ -25,7 +31,8 @@ class Label:
     self.color = _color
     self.txt = str(_txt)
     self.changeText(self.txt);
-    
+    # makes the font
+
   def updateText(self):
     font = pygame.font.SysFont(FONT, self.size, True, False)
     self.textSurf = font.render(str(self.txt), True, self.color)
@@ -80,6 +87,47 @@ class Button:
       pad = 4
       pointList = ( (x + pad, y) , (x + 32 - pad, y + 16), (x + pad, y + 32) )
       pygame.draw.polygon(self.screen, self.color, pointList, 0)
+"""
+class Indicator:
+  def __init(self, destSurface, x, y):
+    self.destSurface = destSurface
+    self.x = x
+    self.y = y
+    self.LightColor = COLOR.BLUE
+    self.IdleColor = COLOR.DARKBLUE
+    self.txt = "play"
+    self.size = 14
+    self.color = self.LightColor
+    self.surface = pygame.Surface((60,40))
+    self.state = STATE.DIM
+    self.dimTimerMax = 30
+    self.dimTimer = 29
+  def updateText():
+    font = pygame.font.SysFont(FONT, self.size, True, False)
+    self.textSurf = font.render(str(self.txt), True, self.color)
+    # self.surface.fill(COLOR.GRAY)
+    self.surface.blit(self.textSurface, (0,0))
+
+  def update(self):
+    if (self.state == STATE.LIGHT):
+      # draw text at full brightness
+      # change state to DIM
+      pygame.draw.text
+      self.state = STATE.DIM
+    elif (self.state == STATE.DIM):
+      if (self.dimTimer >= self.dimTimerMax):
+        # change state to Idle
+        pass
+    elif (self.state == STATE.IDLE):
+      pass
+
+    # light state
+    # dim state
+    # idle state
+  def draw(self):
+    # draw surface on destSurface
+    pass
+"""
 class Sprite:
   def __init__(self, screen, x, y, fileName='shark14x9.png'):
     self.screen = screen
