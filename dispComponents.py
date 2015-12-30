@@ -1,6 +1,7 @@
 import pygame
 import pygame.gfxdraw
 import math
+import random
 import os
 
 # My shapes enumerator
@@ -35,7 +36,8 @@ class Label:
 
   def updateText(self):
     font = pygame.font.SysFont(FONT, self.size, True, False)
-    self.textSurf = font.render(str(self.txt), True, self.color)
+    # self.textSurf = font.render(str(self.txt), True, self.color)
+    self.textSurf = font.render(str(self.txt), False, self.color, (0,0,0))
 
   def changeText(self, _txt):
     self.txt = _txt
@@ -87,9 +89,9 @@ class Button:
       pad = 4
       pointList = ( (x + pad, y) , (x + 32 - pad, y + 16), (x + pad, y + 32) )
       pygame.draw.polygon(self.screen, self.color, pointList, 0)
-"""
+# """
 class Indicator:
-  def __init(self, destSurface, x, y):
+  def __init__(self, destSurface, x, y):
     self.destSurface = destSurface
     self.x = x
     self.y = y
@@ -99,35 +101,51 @@ class Indicator:
     self.size = 14
     self.color = self.LightColor
     self.surface = pygame.Surface((60,40))
+    self.textSurface = None
     self.state = STATE.DIM
     self.dimTimerMax = 30
-    self.dimTimer = 29
-  def updateText():
+    self.dimTimer = 0
+    self.updateText()
+  def updateText(self):
     font = pygame.font.SysFont(FONT, self.size, True, False)
-    self.textSurf = font.render(str(self.txt), True, self.color)
+    self.textSurface = font.render(str(self.txt), True, self.color)
     # self.surface.fill(COLOR.GRAY)
+    self.surface.fill((0,0,200))
     self.surface.blit(self.textSurface, (0,0))
 
   def update(self):
     if (self.state == STATE.LIGHT):
       # draw text at full brightness
       # change state to DIM
-      pygame.draw.text
+      self.color = self.LightColor
       self.state = STATE.DIM
+      self.updateText()
+      print("light %d" % self.dimTimer)
     elif (self.state == STATE.DIM):
+      self.dimTimer += 1
       if (self.dimTimer >= self.dimTimerMax):
         # change state to Idle
-        pass
+        self.state = STATE.IDLE
+        self.dimTimer = 0
+        print("idle")
+      else :
+        # dim color and draw
+        shade = (255 - (self.dimTimer * 5) )
+        if shade < 0 :
+          shade = 0
+        self.color = pygame.Color(shade,shade,shade)
+        self.updateText()
+      print("dim %d" % self.dimTimer)
     elif (self.state == STATE.IDLE):
+      # no need to do anything just draw()
       pass
-
-    # light state
-    # dim state
-    # idle state
+  def pressed(self):
+    self.state = STATE.LIGHT
+    self.dimTimer = 0
   def draw(self):
     # draw surface on destSurface
-    pass
-"""
+    self.destSurface.blit(self.surface, (self.x, self.y))
+# """
 class Sprite:
   def __init__(self, screen, x, y, fileName='shark14x9.png'):
     self.screen = screen

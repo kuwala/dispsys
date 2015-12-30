@@ -6,12 +6,16 @@ class LongRecController(object):
 
   def CPUTick(self):
     self.view.draw()
-    self.model.updateDrawState()
+    # self.view.smartDraw()
+    #self.model.updateDrawState()
   def receiveOSC(self, savedOSC):
     # /t/record 2000
     # /t/play 200
     # /t/stop
     # /t/switch
+
+    # if playbutton pressed
+    # updated playIndicator Display
 
     path = savedOSC.path
     if (path == "/r/play"):
@@ -33,3 +37,10 @@ class LongRecController(object):
       self.model.switch()
       self.view.updateAB()
       self.model.makeActive()
+    elif path =="/r":
+      # generic long recorder osc
+      if len(savedOSC.args) > 0:
+        arg = savedOSC.args[0]
+        if arg == "playButton":
+          self.view.updateIndicator("playButton")
+          self.model.makeActive()

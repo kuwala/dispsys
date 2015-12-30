@@ -11,6 +11,7 @@ class LongRecModel(object):
       self.drawState = "paused"
     else :
       self.drawState = "draw"
+    print("updateing drawstate %s" % self.drawState)
   def updateRunTime(self, millisecs):
     # time 
     # """
