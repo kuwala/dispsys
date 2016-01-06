@@ -6,12 +6,13 @@ BLACK = (0,0,0)
 RED = (255,0,0)
 WHITE = (255,255,255)
 
+
 class ButtonSprite(pygame.sprite.Sprite):
   # [ Play ]
   STATE_DIM = 0
   STATE_LIGHT = 1
   STATE_PAUSED = 2
-  MAX_DIM_TIME = 200
+  MAX_DIM_TIME = 160
 
   def __init__(self, text="button", group=None):
     pygame.sprite.Sprite.__init__(self, group)
@@ -35,7 +36,7 @@ class ButtonSprite(pygame.sprite.Sprite):
 
   def changeText(self, text):
     self.text = text
-    updateImage(self)
+    self.updateImage()
 
   def update(self):
     # The button dims itself on each update
@@ -60,6 +61,15 @@ class ButtonSprite(pygame.sprite.Sprite):
       # Its not light or dim so its paused
       pass 
 
+class ButtonCounterSprite(ButtonSprite):
+  def __init__(self, text="0", group=None):
+    ButtonSprite.__init__(self, text, group)
+    self.counter = 0
+  def update(self):
+    # button text increments with every frame.
+    self.counter += 1
+    ButtonSprite.changeText(self, str(self.counter))
+    ButtonSprite.update(self)
 class Scene2View:
   def __init__(self, screen):
     self.screen = screen
@@ -146,6 +156,8 @@ class SceneView:
   def setupComponents(self):
     button = ButtonSprite("Go", self.spriteGroup)
     button.rect.topleft = ( 100, 100)
+    counterButton = ButtonCounterSprite("1000", self.spriteGroup)
+    counterButton.rect.topleft=(100,200)
 
   def notify(self, event):
     # passes events to components
