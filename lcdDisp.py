@@ -98,9 +98,9 @@ class LcdDisp:
     # - - - - - -
     # Route OSC based on first address container
     # - - - - - -
-    selected = string.split(self.savedOSC.path, "/")[1]
-    # s = synth, d = drums, t = tape, q = synth, r = longRecord
     if self.savedOSC.fresh == "hot":
+      selected = string.split(self.savedOSC.path, "/")[1]
+      # s = synth, d = drums, t = tape, q = synth, r = longRecord
       if selected == "s":
         self.activeModuleController = self.synthController
         self.activeModuleController.receiveOSC(self.savedOSC)

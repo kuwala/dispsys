@@ -12,6 +12,7 @@ class oscServerGuy(object):
     serverIP = ("127.0.0.1", 57121)
     print( "osc Server sarted on IP & Port: ", serverIP) 
     self.oscServer = OSCServer( serverIP )
+    self.oscServer.addMsgHandler("/test", self.callBack)
     self.oscServer.addMsgHandler("/text", self.callBack)
     self.oscServer.addMsgHandler("/s" , self.callBack)
     self.oscServer.addMsgHandler("/s/k1" , self.callBack)
