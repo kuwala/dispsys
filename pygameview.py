@@ -6,14 +6,61 @@ BLACK = (0,0,0)
 RED = (255,0,0)
 WHITE = (255,255,255)
 
+# Unique component idNames
+# MODULE_COMPONENT_NAME = moduleNumberDigi + ComponentDigit
+REC = 1000
+LOOP = 2000
+SYNTH = 3000
+DRUM = 4000
+SEQ = 5000
 
-class ButtonSprite(pygame.sprite.Sprite):
+REC_TITLE_LABEL = 1001
+REC_PLAY_BUTTON = 1002
+REC_RECORD_BUTTON = 1003
+REC_STOP_BUTTON = 1004
+REC_SWITCH_BUTTON = 1005
+REC_RUNTIME_LABEL = 1006
+
+
+class Label(pygame.sprite.Sprite):
+  # Just a simple text label. you
+  # can changeText or changeColor
+  def __init__(self, text="label",group=None, size=30, color=(255,255,255) ):
+    pygame.sprite.Sprite.__init__(self, group)
+    self.text = text
+    self.idName = "NotYet"
+    self.color = color
+    self.fontSize = size
+    self.image = None
+    self.updateImage()
+    self.rect = self.image.get_rect()
+
+  def setID(self, idName):
+    self.idName = idName
+
+  def updateImage(self):
+    font = pygame.font.Font(None, self.fontSize)
+    self.image = font.render(self.text, 1, self.color)
+    
+  def update(self):
+    pass
+  
+  def changeText(self, text):
+    self.text = str(text)
+    self.updateImage()
+
+  def changeColor(self, color):
+    self.color = color
+    self.updateImage()
+
+
+class Button(pygame.sprite.Sprite):
   # [ Play ]
   STATE_DIM = 0
   STATE_LIGHT = 1
   STATE_PAUSED = 2
   MAX_DIM_TIME = 160
-
+  
   def __init__(self, text="button", group=None):
     pygame.sprite.Sprite.__init__(self, group)
     self.text = text
@@ -22,10 +69,10 @@ class ButtonSprite(pygame.sprite.Sprite):
     self.updateImage()
     self.rect = self.image.get_rect()
     self.dimTimer = 0
-    self.state = ButtonSprite.STATE_LIGHT
+    self.state = Button.STATE_LIGHT
 
   def pressed(self):
-    self.state = ButtonSprite.STATE_LIGHT
+    self.state = Button.STATE_LIGHT
     self.dimTimer = 0
 
   def updateImage(self):
@@ -43,134 +90,155 @@ class ButtonSprite(pygame.sprite.Sprite):
     # once it reaches MAX_DIM_TIME it will no
     # longer updateImage()
 
-    if self.state == ButtonSprite.STATE_LIGHT:
+    if self.state == Button.STATE_LIGHT:
       self.color = WHITE
       self.updateImage()
-      self.state = ButtonSprite.STATE_DIM
+      self.state = Button.STATE_DIM
 
-    elif self.state == ButtonSprite.STATE_DIM:
+    elif self.state == Button.STATE_DIM:
       # if dimTimer is not maxed out continue Dimming
-      if self.dimTimer < ButtonSprite.MAX_DIM_TIME:
+      if self.dimTimer < Button.MAX_DIM_TIME:
         c = 255 - self.dimTimer
         self.color = ( c, c, c)
         self.updateImage()
       else :
-        self.state = ButtonSprite.STATE_DIM
+        self.state = Button.STATE_DIM
       self.dimTimer += 1
     else :
       # Its not light or dim so its paused
       pass 
 
-class ButtonCounterSprite(ButtonSprite):
+class ButtonCounterSprite(Button):
   def __init__(self, text="0", group=None):
-    ButtonSprite.__init__(self, text, group)
+    Button.__init__(self, text, group)
     self.counter = 0
   def update(self):
     # button text increments with every frame.
     self.counter += 1
-    ButtonSprite.changeText(self, str(self.counter))
-    ButtonSprite.update(self)
-class Scene2View:
-  def __init__(self, screen):
+    Button.changeText(self, str(self.counter))
+    Button.update(self)
+
+class Sprite(pygame.sprite.Sprite):
+  def __init__(self, group="none", fileName = "titleScreen320x240.png"):
+    pygame.sprite.Sprite.__init__(self, group)
+    folder = 'assets'
+    file = fileName
+    self.image = pygame.image.load(os.path.join(folder, file)).convert()
+    self.rect = self.image.get_rect()
+  def update(self):
+    pass
+  
+
+
+
+class Scene(object):
+  def __init__(self, screen, backgroundColor = (0,0,0) ):
     self.screen = screen
     self.background = pygame.Surface( screen.get_size() )
-    self.background.fill((0,0,0))
+    self.background.fill((0,0,40))
     self.spriteGroup = pygame.sprite.RenderUpdates()
     self.setupComponents()
-
-  def clearScreen(self):
-    self.screen.blit( self.background, (0,0))
-    pygame.display.flip()
-
-  def updateButton(self, event):
-    # make button light up based on which button was pressed
-    buttonSprite = None
-    if event.button == 1:
-      buttonSprite = self.getButtonByText("Play")
-
-    elif event.button == 2:
-      buttonSprite = self.getButtonByText("Record")
-
-    elif event.button == 3:
-      buttonSprite = self.getButtonByText("Stop")
-
-    elif event.button == 4:
-      buttonSprite = self.getButtonByText("Switch")
-
-    # check if we got a button
-    if not buttonSprite == None:
-      buttonSprite.pressed()
- 
-  def getButtonByText(self, text):
-    for buttonSprite in self.spriteGroup:
-      if buttonSprite.text == text:
-        return buttonSprite
-
   def setupComponents(self):
-    button = ButtonSprite("Play", self.spriteGroup)
-    button.rect.topleft = (10,50)
-    button = ButtonSprite("Record", self.spriteGroup)
-    button.rect.topleft = (110,50)
-    button = ButtonSprite("Stop", self.spriteGroup)
-    button.rect.topleft = (210,50)
-    button = ButtonSprite("Switch", self.spriteGroup)
-    button.rect.topleft = (290,50)
-
-  def notify(self, event):
-    # passes events to components
-    if isinstance(event, events.TickEvent):
-      #clear update draw sprites
-      self.spriteGroup.clear(self.screen, self.background)
-      self.spriteGroup.update()
-      dirtyRects = self.spriteGroup.draw( self.screen )
-
-      pygame.display.update( dirtyRects)
-    elif isinstance(event, events.ButtonPressedEvent):
-      self.updateButton(event)
-
-class SceneView:
-  def __init__(self, screen):
-    self.screen = screen
-    self.background = pygame.Surface( screen.get_size() )
-    self.background.fill((0,0,200))
-    self.spriteGroup = pygame.sprite.RenderUpdates()
-    self.setupComponents()
-
+    # create all the components here
+    # and add them to the spriteGroup 
+    button = Button("DefaultScene", self.spriteGroup)
+    button.name = "DefaultButton"
+    button.rect.topleft = ( 50, 50)
   def clearScreen(self):
     self.screen.blit(self.background, (0,0))
     pygame.display.flip()
-
-  def updateButton(self, event):
-    buttonSprite = None
-    if event.button == 1:
-      buttonSprite = self.getButtonByText("Go")
-    if not buttonSprite == None:
-      buttonSprite.pressed()
-      buttonSprite.rect.move_ip(2,0)
-        
-  def getButtonByText(self, text):
-    for buttonSprite in self.spriteGroup:
-      if buttonSprite.text == text:
-        return buttonSprite
-
-  def setupComponents(self):
-    button = ButtonSprite("Go", self.spriteGroup)
-    button.rect.topleft = ( 100, 100)
-    counterButton = ButtonCounterSprite("1000", self.spriteGroup)
-    counterButton.rect.topleft=(100,200)
+  def clearUpdateDraw(self):
+    # clear, update, draw
+    # all sprites in spriteGroup
+    self.spriteGroup.clear(self.screen, self.background)
+    self.spriteGroup.update()
+    dirtyRects = self.spriteGroup.draw(self.screen)
+    pygame.display.update(dirtyRects)
+  def getCompByName(self, name):
+    for component in self.spriteGroup:
+      if component.name == name:
+        return component
 
   def notify(self, event):
-    # passes events to components
     if isinstance(event, events.TickEvent):
-      #clear update draw sprites
-      self.spriteGroup.clear(self.screen, self.background)
-      self.spriteGroup.update()
-      dirtyRects = self.spriteGroup.draw( self.screen )
+      self.clearUpdateDraw()
 
-      pygame.display.update( dirtyRects)
+class SynthScene(Scene):
+  def __init__(self, screen):
+    Scene.__init__(self, screen)
+  def setupComponents(self):
+    sprite = Sprite(self.spriteGroup)
+    sprite.rect.topleft = (0,0)
+
+class DrumScene(Scene):
+  def __init__(self, screen):
+    Scene.__init__(self,screen)
+
+class RecScene(Scene):
+  def __init__(self, screen):
+    Scene.__init__(self, screen)
+  def setupComponents(self):
+    # Title
+    label = Label("Recorder", self.spriteGroup, 72, (127,255,127))
+    label.name = "title_label"
+    label.rect.topleft = (32,2)
+    # RunTime
+    label = Label("00:00.0", self.spriteGroup, 72)
+    label.name = "runtime"
+    label.rect.topleft = (64,100)
+    # Play Rec Stop Switch
+    button = Button("Play", self.spriteGroup)
+    button.name = "play"
+    button.rect.topleft = (16, 200)
+    button = Button("Record", self.spriteGroup)
+    button.name = "record"
+    button.rect.topleft = (72, 200)
+    button = Button("Stop", self.spriteGroup)
+    button.name = "stop"
+    button.rect.topleft = (164, 200)
+    button = Button("Switch", self.spriteGroup)
+    button.name = "switch"
+    button.rect.topleft = (232, 200)
+
+  def routeButtonEvent(self, event):
+    buttonSprite = None
+    if event.button == 1:
+      buttonSprite = self.getCompByName("play")
+    elif event.button == 2:
+      buttonSprite = self.getCompByName("record")
+    elif event.button == 3:
+      buttonSprite = self.getCompByName("stop")
+    elif event.button == 4:
+      buttonSprite = self.getCompByName("switch")
+    if buttonSprite:
+      buttonSprite.pressed()
+
+  def routeRuntimeEvent(self, event):
+    labelSprite = None
+    if not event.runtime == None:
+      labelSprite = self.getCompByName("runtime")
+    if labelSprite:
+      timeText = self.calculateRuntime(event.runtime)
+      labelSprite.changeText(timeText)
+
+  def calculateRuntime(self, millis):
+    # time is recieved in millisecs
+    tenths = millis / 100
+    tenths = tenths % 10
+    secs = millis / 1000
+    secs = secs % 60
+    mins = millis / 60000
+    text = str(mins).zfill(2) + ":" + str(secs).zfill(2) + "." + str(tenths)
+    return text
+
+  def notify(self, event):
+    if isinstance(event, events.TickEvent):
+      self.clearUpdateDraw()
     elif isinstance(event, events.ButtonPressedEvent):
-      self.updateButton(event)
-      
+      self.routeButtonEvent(event)
+    elif isinstance(event, events.RuntimeEvent):
+      print("notifing view of runtime")
+      self.routeRuntimeEvent(event)
 
 class PygameView:
   def __init__(self, evManager):
@@ -201,11 +269,12 @@ class PygameView:
     pygame.display.flip()
 
     # Setup SceneViews
-    self.test2View = Scene2View(self.screen)
-    self.testView = SceneView(self.screen)
+    self.recScene = RecScene(self.screen)
+    self.synthScene = SynthScene(self.screen)
+    self.drumScene = DrumScene(self.screen)
 
     # current scene view
-    self.activeScene = self.test2View
+    self.activeScene = self.recScene
 
     # make groups for sprites
 
@@ -216,9 +285,11 @@ class PygameView:
     """
     nextScene = None
     if event.button == "q":
-      nextScene = self.test2View
+      nextScene = self.recScene
+    elif event.button == "r":
+      nextScene = self.recScene
     elif event.button == "w":
-      nextScene = self.testView
+      nextScene = self.synthScene
     else:
       # other event pass to scene
       self.activeScene.notify(event)
@@ -234,6 +305,10 @@ class PygameView:
     elif isinstance( event, events.ButtonPressedEvent):
       # self.updateButton(event)
       self.interpertButton(event)
+    else :
+      # its some other event lets
+      # let the active sceen know
+      self.activeScene.notify(event)
 
 
     

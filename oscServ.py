@@ -22,6 +22,7 @@ class oscServerGuy(object):
     self.oscServer.addMsgHandler("/d" , self.callBack)
     self.oscServer.addMsgHandler("/q" , self.callBack)
     self.oscServer.addMsgHandler("/r" , self.callBack)
+    self.oscServer.addMsgHandler("/r/runtime" , self.callBack)
     self.oscServer.addMsgHandler("/r/play" , self.callBack)
     self.oscServer.addMsgHandler("/r/record" , self.callBack)
     self.oscServer.addMsgHandler("/r/stop" , self.callBack)

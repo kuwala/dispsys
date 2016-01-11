@@ -16,23 +16,54 @@ class OSCController:
     self.savedOSC = savedOSC
   def notify(self, event):
     if isinstance(event, TickEvent):
-      if self.savedOSC.fresh == "hot":
+      path = self.savedOSC.path
+      args = self.savedOSC.args
+      fresh = self.savedOSC.fresh
+      if fresh == "hot":
         # check for which is the main OSC target container
         # this is a good way to do it if you have lots of osc msgs
         # path = string.split( self.savedOSC.path, "/")[1]
         # if path == "test":
-        debug("oscController recieved %s" % self.savedOSC.path)
-        if self.savedOSC.path == "/test":
+        debug("oscController recieved %s" % path)
+
+        # see if osc matchs anything we want to recieve
+        # and if so make an event than at the end post it
+        # to the evManager
+        event = None
+        if path == "/test":
           # test - testing OSC recieved
           # if it has more then 2 arguments
           # find out whichbutton was pressed
           # /test p 0-3   <-- buton 0-3 was pressed
           # /test r 0-3   <-- buton 0-3 was released
-          if len(self.savedOSC.args) > 1:
+          if len(args) > 1:
             # asume it was pressed
-            button = self.savedOSC.args[1]
+            button = args[1]
             event = ButtonPressedEvent(button)
-            self.evManager.post(event)
+        elif path == "/r":
+          event = ButtonPressedEvent("r")
+        elif path == "/r/runtime":
+          # /r/runtime p 110
+          # address p = play r = record 
+          # /r/runtime state time_in_10ths_secs
+          if len (args) > 0:
+            runtime = args[1] 
+            event = RuntimeEvent(runtime)
+        elif path == "/r/play":
+          event = ButtonPressedEvent(1)
+        elif path == "/r/record":
+          event = ButtonPressedEvent(2)
+        elif path == "/r/stop":
+          event = ButtonPressedEvent(3)
+          # event2 = RuntimeEvent(0)
+          # self.evManager.post(event2)
+        elif path == "/r/switch":
+          event = ButtonPressedEvent(4)
+          
+        # Post the event to listeners
+        if not event == None:
+          self.evManager.post(event)
+          
         # Mark the saved OSC as old
         self.savedOSC.fresh = "cold"
 
@@ -74,6 +105,14 @@ class KeyboardController:
             ev = ButtonPressedEvent("q")
           elif event.key == pygame.K_w:
             ev = ButtonPressedEvent("w")
+          elif event.key == pygame.K_s:
+            ev = ButtonPressedEvent("s")
+          elif event.key == pygame.K_d:
+            ev = ButtonPressedEvent("d")
+          elif event.key == pygame.K_r:
+            ev = ButtonPressedEvent("r")
+          elif event.key == pygame.K_t:
+            ev = ButtonPressedEvent("t")
           elif event.key == pygame.K_5:
             ev = ButtonPressedEvent(5)
           elif event.key == pygame.K_ESCAPE:
@@ -101,6 +140,11 @@ class ButtonPressedEvent(Event):
   def __init__(self, button):
     self.button = button
 
+class RuntimeEvent(Event):
+  def __init__(self, runtime):
+    self.runtime = runtime
+
+
 class QuitEvent(Event):
   pass
 
@@ -120,7 +164,7 @@ class EventManager:
 
   def post(self, event):
     if not isinstance(event, TickEvent):
-      debug("This event was recieved %s" % event.__class__.__name__)
+      debug("This event was posted %s" % event.__class__.__name__)
     for listener in self.listeners.keys():
       # Note: if weakref has died, it will be
       # Automatically removed, so we dont
