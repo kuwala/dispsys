@@ -4,7 +4,8 @@ import events
 from oscServ import oscServerGuy
 from models import synthState
 
-print("Pygame RpiSynth MVC test started")
+print("Pygame RpiSynth Display")
+print("Made by: Daniel")
 
 savedOSC = synthState()
 oscGuy = oscServerGuy(savedOSC)

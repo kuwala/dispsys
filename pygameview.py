@@ -60,7 +60,7 @@ class Button(pygame.sprite.Sprite):
   STATE_DIM = 0
   STATE_LIGHT = 1
   STATE_PAUSED = 2
-  MAX_DIM_TIME = 160
+  MAX_DIM_TIME = 10
   
   def __init__(self, text="button", group=None):
     pygame.sprite.Sprite.__init__(self, group)
@@ -99,7 +99,8 @@ class Button(pygame.sprite.Sprite):
     elif self.state == Button.STATE_DIM:
       # if dimTimer is not maxed out continue Dimming
       if self.dimTimer < Button.MAX_DIM_TIME:
-        c = 255 - self.dimTimer
+        ratePerFrame = 25
+        c = 255 - self.dimTimer * ratePerFrame
         self.color = ( c, c, c)
         self.updateImage()
       else :
