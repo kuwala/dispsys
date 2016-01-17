@@ -4,7 +4,7 @@ import events
 from oscServ import oscServerGuy
 from models import synthState
 
-print("Pygame RpiSynth test started")
+print("Pygame RpiSynth MVC test started")
 
 savedOSC = synthState()
 oscGuy = oscServerGuy(savedOSC)
@@ -16,9 +16,10 @@ keyboardController = events.KeyboardController(evManager)
 cpuSpinner = events.CPUSpinner(evManager)
 
 view = PygameView(evManager)
+
 # run the visuals as fast as possible
 # but catch KeyboardInterrupt as to not
-# leave a thread hanging when force closed
+# leave the OSC thread hanging when force closed
 
 try :
   cpuSpinner.run()

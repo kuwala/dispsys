@@ -3,7 +3,8 @@ import threading, string
 import pygame
 
 def debug(text):
-  print(text)
+  #print(text)
+  pass
 
 class OSCController:
   """ Checks the SavedOSC for a hot msg
@@ -27,9 +28,12 @@ class OSCController:
         debug("oscController recieved %s" % path)
 
         # see if osc matchs anything we want to recieve
-        # and if so make an event than at the end post it
+        # and if so make an event(s) than at then end post it
         # to the evManager
         event = None
+        # if an OSC makes more then one event then they are stored in events
+        events = []
+
         if path == "/test":
           # test - testing OSC recieved
           # if it has more then 2 arguments
@@ -40,6 +44,8 @@ class OSCController:
             # asume it was pressed
             button = args[1]
             event = ButtonPressedEvent(button)
+
+        # - - - - - - - - Recorder - - - - - - - -
         elif path == "/r":
           event = ButtonPressedEvent("r")
         elif path == "/r/runtime":
@@ -59,11 +65,89 @@ class OSCController:
           # self.evManager.post(event2)
         elif path == "/r/switch":
           event = ButtonPressedEvent(4)
+
+        # - - - - - - - - Synth - - - - - - - -
+        elif path == "/s":
+          n = args[0]
+          if n == -1:
+            # synth init / became active
+            event = ButtonPressedEvent("s")
+          elif not n == None:
+            # note played
+            event = ButtonPressedEvent("s")
           
-        # Post the event to listeners
+        elif path == "/s/attack/param":
+          v = args[0]
+          event = ParamChangedEvent("attack_bar", v)
+        elif path == "/s/decay/param":
+          v = args[0]
+          event = ParamChangedEvent("decay_bar", v)
+        elif path == "/s/volume/param":
+          v = args[0]
+          event = ParamChangedEvent("volume_bar", v)
+        elif path == "/s/modfreq/param":
+          v = args[0]
+          event = ParamChangedEvent("modulation_bar", v)
+        elif path == "/s/selectKnob":
+          v = args[0]
+          event = SelectKnobEvent(v)
+
+        # - - - - - - - - Drum - - - - - - - -
+        elif path == "/d":
+          n = args[0]
+          if n == -1:
+            # drum init / became active
+            event = ButtonPressedEvent("d")
+          elif not n == None:
+            # note played
+            event = ButtonPressedEvent("d")
+            
+        # - - - - - - - - Sequencer - - - - - - - -
+        elif path == "/q":
+          state = args[0]
+          if state == -1:
+            event = ButtonPressedEvent("q")
+          elif not state == None:
+            # note played
+            # /s r 12 250
+            # /s i o 250
+            # /s p 12 250
+            # /s state step durationMs
+            # event = ButtonPressedEvent("q")
+            step = args[1]
+            events.append(SequenceStepEvent(step))
+            events.append(SequenceStateEvent(state))
+
+
+        # - - - - - - - - Looper - - - - - - - -
+        # /t p 0.25
+        # /t s
+        # /t r 0.123
+        elif path == "/t":
+          state = args[0]
+          if state == -1:
+            # make view active
+            events.append(ButtonPressedEvent("t"))
+            runtime = args[2]
+            newState = args[1]
+            events.append(RuntimeEvent(runtime))
+            events.append(LooperStateEvent(newState))
+            
+
+          elif not state == None:
+            runtime = args[1]
+            event = RuntimeEvent(runtime)
+            event2 = LooperStateEvent(state)
+            events.append(event)
+            events.append(event2)
+
+        # - - - - - - - - Post Event - - - - - - - -
+        # Post the events to listeners
+        for event in events:
+          self.evManager.post(event)
         if not event == None:
           self.evManager.post(event)
-          
+
         # Mark the saved OSC as old
         self.savedOSC.fresh = "cold"
 
@@ -109,10 +193,14 @@ class KeyboardController:
             ev = ButtonPressedEvent("s")
           elif event.key == pygame.K_d:
             ev = ButtonPressedEvent("d")
-          elif event.key == pygame.K_r:
-            ev = ButtonPressedEvent("r")
           elif event.key == pygame.K_t:
             ev = ButtonPressedEvent("t")
+          elif event.key == pygame.K_l:
+            ev = ButtonPressedEvent("l")
+          elif event.key == pygame.K_r:
+            ev = ButtonPressedEvent("r")
+          elif event.key == pygame.K_i:
+            ev = ButtonPressedEvent("i")
           elif event.key == pygame.K_5:
             ev = ButtonPressedEvent(5)
           elif event.key == pygame.K_ESCAPE:
@@ -136,9 +224,34 @@ class TickEvent(Event):
   def __init__(self):
     self.name = "butts"
 
+class SelectKnobEvent(Event):
+  def __init__(self, knob):
+    self.knob = knob
+
 class ButtonPressedEvent(Event):
   def __init__(self, button):
     self.button = button
+
+class LooperStateEvent(Event):
+  def __init__(self, state):
+    self.state = state
+
+class SequenceStateEvent(Event):
+  def __init__(self, state):
+    self.state = state
+    # states: play, stop, record
+class SequenceStepEvent(Event):
+  def __init__(self, step):
+    self.step = step
+
+class NoteEvent(Event):
+  def __init__(self, note):
+    self.note = note
+
+class ParamChangedEvent(Event):
+  def __init__(self, name, value):
+    self.name = name
+    self.value = value
 
 class RuntimeEvent(Event):
   def __init__(self, runtime):

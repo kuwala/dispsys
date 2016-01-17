@@ -1,11 +1,13 @@
 import pygame
-import os
+import os, random, string
 import events
 
 BLACK = (0,0,0)
 RED = (255,0,0)
+REDPINK = (255,127,127)
 WHITE = (255,255,255)
 
+""" # This is premature optimization
 # Unique component idNames
 # MODULE_COMPONENT_NAME = moduleNumberDigi + ComponentDigit
 REC = 1000
@@ -20,7 +22,7 @@ REC_RECORD_BUTTON = 1003
 REC_STOP_BUTTON = 1004
 REC_SWITCH_BUTTON = 1005
 REC_RUNTIME_LABEL = 1006
-
+"""
 
 class Label(pygame.sprite.Sprite):
   # Just a simple text label. you
@@ -32,6 +34,7 @@ class Label(pygame.sprite.Sprite):
     self.color = color
     self.fontSize = size
     self.image = None
+    self.font = pygame.font.Font(None, self.fontSize)
     self.updateImage()
     self.rect = self.image.get_rect()
 
@@ -39,8 +42,7 @@ class Label(pygame.sprite.Sprite):
     self.idName = idName
 
   def updateImage(self):
-    font = pygame.font.Font(None, self.fontSize)
-    self.image = font.render(self.text, 1, self.color)
+    self.image = self.font.render(self.text, 1, self.color)
     
   def update(self):
     pass
@@ -52,7 +54,6 @@ class Label(pygame.sprite.Sprite):
   def changeColor(self, color):
     self.color = color
     self.updateImage()
-
 
 class Button(pygame.sprite.Sprite):
   # [ Play ]
@@ -163,16 +164,266 @@ class Scene(object):
     if isinstance(event, events.TickEvent):
       self.clearUpdateDraw()
 
-class SynthScene(Scene):
+class IntroScene(Scene):
   def __init__(self, screen):
     Scene.__init__(self, screen)
   def setupComponents(self):
     sprite = Sprite(self.spriteGroup)
     sprite.rect.topleft = (0,0)
 
+class ProgressBar(pygame.sprite.Sprite):
+  def __init__(self, spriteGroup = None, width = 64):
+    pygame.sprite.Sprite.__init__(self, spriteGroup)
+    self.value = .5
+    self.bgColor = (64,64,64)
+    self.color = (255,255,255)
+    self.width = width
+    self.height = 2
+    self.image = pygame.Surface((self.width, self.height))
+    self.rect = self.image.get_rect()
+    self.dirty = 1
+
+  def setValue(self, value):
+    self.value = value
+    self.dirty = 1
+
+  def update(self):
+    if self.dirty == 1:
+      self.updateImage()
+      self.dirty = 0
+
+  def updateImage(self):
+    self.image.fill(self.bgColor)
+    rect = (0,0, self.width * self.value, self.height)
+    pygame.draw.rect(self.image, self.color, rect)
+    """ # Beautification saved for later
+    centerY = 6
+    rect = (0,centerY, self.width, self.height)
+    pygame.draw.rect(self.image, self.bgColor, rect)
+    rect = (0,centerY, self.width * self.value, self.height)
+
+    pygame.draw.rect(self.image, self.color, rect)
+    x = self.width * self.value
+    y = 4
+    pos = ( int(x), int(y) )
+    pygame.draw.circle(self.image, self.color, pos, 4)
+    """
+    
+
 class DrumScene(Scene):
   def __init__(self, screen):
-    Scene.__init__(self,screen)
+    Scene.__init__(self, screen)
+  def setupComponents(self):
+    label = Label("Drums", self.spriteGroup, 72, (255,127,255))
+    label.name = "title_label"
+    label.rect.topleft = (74,2)
+
+class LooperModel():
+  def __init__(self):
+    self.state = "idle"
+    self.barLength = 1
+  def setState(self, state):
+    self.state = state
+  def getStateText(self):
+    if self.state == "p":
+      text = "Play"
+    elif self.state == "r":
+      text = "Record"
+    elif self.state == "s":
+      text = "Stop"
+    return text
+
+class LoopScene(Scene):
+  def __init__(self, screen):
+    Scene.__init__(self, screen)
+    self.looperModel = LooperModel()
+
+  def setupComponents(self):
+    # speed
+    label = Label("Looper", self.spriteGroup, 72, (255,127,127))
+    label.name = "title_label"
+    label.rect.topleft = (64,2)
+    
+    # progress bar
+    progressBar = ProgressBar(self.spriteGroup, 192)
+    progressBar.name = "loop_progress_bar"
+    progressBar.rect.topleft = ( 62, 212 )
+
+    # Play/Stop/Rec Button
+    label = Label("Play", self.spriteGroup)
+    label.name = "play_label"
+    label.rect.topleft = (64,64)
+
+  def routeRuntimeEvent(self, event):
+    component = None
+    component = self.getCompByName("loop_progress_bar")
+    component.setValue(event.runtime)
+
+  def routeLooperStateEvent(self, event):
+    if not self.looperModel.state == event.state:
+      self.looperModel.state = event.state
+      component = None
+      component = self.getCompByName("play_label")
+      component.changeText(self.looperModel.getStateText())
+      if event.state == "r":
+        component.changeColor(REDPINK)
+      else:
+        component.changeColor(WHITE)
+
+  def notify(self, event):
+    if isinstance(event, events.TickEvent):
+      self.clearUpdateDraw()
+    elif isinstance(event, events.RuntimeEvent):
+      self.routeRuntimeEvent(event)
+    elif isinstance(event, events.LooperStateEvent):
+      self.routeLooperStateEvent(event)
+
+class SequencerScene(Scene):
+  def __init__(self, screen):
+    Scene.__init__(self, screen)
+  def setupComponents(self):
+    #title
+    label = Label("Sequencer", self.spriteGroup, 72, (255,127,127))
+    label.name = "title_label"
+    label.rect.topleft = (32,2)
+    #play / stop/ rec button
+    button = Label("Play", self.spriteGroup)
+    button.name = "play_button"
+    button.rect.topleft = ( 32,64)
+    #big sequence numbers
+    label = Label("12", self.spriteGroup, 300, (255,255,255))
+    label.name = "sequence_label"
+    label.rect.topleft = ( 64,44)
+    #note speed
+    label = Label("Beats", self.spriteGroup, 18, (255,127,127))
+    label.name = "bpm_label"
+    label.rect.topleft = ( 32,180)
+    button = Button("120", self.spriteGroup)
+    button.name = "bpm_value_button"
+    button.rect.topleft = (32,196)
+  def routeSequenceStateEvent(self, event):
+    # play stop rec
+    component = self.getCompByName("play_button")
+    if not component == None:
+      state = event.state
+      text = None
+      if state == "p":
+        text = "Play"
+      elif state == "r":
+        text = "Record"
+      elif state == "i":
+        text = "Stop"
+      if not text == None:
+        component.changeText(text)
+
+  def routeSequenceStepEvent(self, event):
+    component = self.getCompByName("sequence_label")
+    if not component == None:
+      step = event.step
+      component.changeText(step)
+
+  def notify(self, event):
+    if isinstance(event, events.TickEvent):
+      self.clearUpdateDraw()
+    elif isinstance(event, events.SequenceStateEvent):
+      self.routeSequenceStateEvent(event)
+    elif isinstance(event, events.SequenceStepEvent):
+      self.routeSequenceStepEvent(event)
+
+class SynthBlocks(pygame.sprite.Sprite):
+  def __init__(self, spriteGroup = None):
+    pygame.sprite.Sprite.__init__(self, spriteGroup)
+    self.noteColors = []
+    for note in range(0,12):
+      self.noteColors.append( self.randColor() )
+  def randColor(self):
+    return (random.randint(0,255),random.randint(0,255),random.randint(0,255))
+
+class SynthScene(Scene):
+  def __init__(self, screen):
+    Scene.__init__(self, screen)
+  def setupComponents(self):
+    label = Label("Synth", self.spriteGroup, 72, (127,127,255))
+    label.name = "title_label"
+    label.rect.topleft = (74, 2)
+
+    # Synth Blocks Visulization
+
+    button = Button("^",self.spriteGroup)
+    button.name="select_knob_0"
+    button.rect.topleft = ( 36, 220)
+    button = Button("^",self.spriteGroup)
+    button.name="select_knob_1"
+    button.rect.topleft = ( 112, 220)
+    button = Button("^",self.spriteGroup)
+    button.name="select_knob_2"
+    button.rect.topleft = ( 190, 220)
+    button = Button("^",self.spriteGroup)
+    button.name="select_knob_3"
+    button.rect.topleft = ( 260, 220)
+
+    # Attack
+    modlabel = Label("Attack", self.spriteGroup, 16, (64,64,255))
+    modlabel.name = "attack_label"
+    modlabel.rect.topleft = ( 12, 196 )
+
+    progressBar = ProgressBar(self.spriteGroup)
+    progressBar.name = "attack_bar"
+    progressBar.rect.topleft = ( 12, 212 )
+    # Decay
+    modlabel = Label("Decay", self.spriteGroup, 16, (64,64,255))
+    modlabel.name = "decay_label"
+    modlabel.rect.topleft = ( 86, 196 )
+
+    progressBar = ProgressBar(self.spriteGroup)
+    progressBar.name = "decay_bar"
+    progressBar.rect.topleft = ( 86, 212 )
+    # Volume
+    modlabel = Label("Amplitude", self.spriteGroup, 16, (255,64,64))
+    modlabel.name = "volume_label"
+    modlabel.rect.topleft = ( 164, 196 )
+
+    progressBar = ProgressBar(self.spriteGroup)
+    progressBar.name = "volume_bar"
+    progressBar.rect.topleft = ( 164, 212 )
+    # Modulation Param
+    modLabel = Label("Modulation", self.spriteGroup, 16, (127,127,127))
+    modLabel.name = "modulation_label"
+    modLabel.rect.topleft = ( 236, 196 )
+
+    progressBar = ProgressBar(self.spriteGroup)
+    progressBar.name = "modulation_bar"
+    progressBar.rect.topleft = ( 236, 212 )
+
+  def routeButtonEvent(self, event):
+    component = None
+    if event.button == 1:
+      component = self.getCompByName("modulation_bar")
+      if component:
+        rand = random.random()
+        component.setValue(rand)
+
+  def routeParamEvent(self, event):
+    name = event.name
+    component = self.getCompByName(name)
+    if component:
+      component.setValue(event.value)
+
+  def routeSelectKnob(self, event):
+    name = "select_knob_" + str(event.knob)
+    component = self.getCompByName(name)
+    if component:
+      component.pressed()
+
+  def notify(self, event):
+    if isinstance(event, events.TickEvent):
+      self.clearUpdateDraw()
+    elif isinstance(event, events.ButtonPressedEvent):
+      self.routeButtonEvent(event)
+    elif isinstance(event, events.ParamChangedEvent):
+      self.routeParamEvent(event)
+    elif isinstance(event, events.SelectKnobEvent):
+      self.routeSelectKnob(event)
 
 class RecScene(Scene):
   def __init__(self, screen):
@@ -181,7 +432,7 @@ class RecScene(Scene):
     # Title
     label = Label("Recorder", self.spriteGroup, 72, (127,255,127))
     label.name = "title_label"
-    label.rect.topleft = (32,2)
+    label.rect.topleft = (48,2)
     # RunTime
     label = Label("00:00.0", self.spriteGroup, 72)
     label.name = "runtime"
@@ -237,7 +488,6 @@ class RecScene(Scene):
     elif isinstance(event, events.ButtonPressedEvent):
       self.routeButtonEvent(event)
     elif isinstance(event, events.RuntimeEvent):
-      print("notifing view of runtime")
       self.routeRuntimeEvent(event)
 
 class PygameView:
@@ -260,21 +510,17 @@ class PygameView:
     self.background = pygame.Surface( self.screen.get_size() )
     self.background.fill( BLACK )
 
-    # Draw a welcome screen
-    font = pygame.font.Font(None, 30)
-    text = """Welcome (. _ .)"""
-    textImg = font.render( text, 1, RED )
-    self.background.blit(textImg, (0,0))
-    self.screen.blit( self.background, (0,0) )
-    pygame.display.flip()
-
     # Setup SceneViews
-    self.recScene = RecScene(self.screen)
+    self.introScene = IntroScene(self.screen)
     self.synthScene = SynthScene(self.screen)
     self.drumScene = DrumScene(self.screen)
+    self.sequencerScene = SequencerScene(self.screen)
+    self.loopScene = LoopScene(self.screen)
+    self.recScene = RecScene(self.screen)
 
     # current scene view
-    self.activeScene = self.recScene
+    # set intro scene as the first view
+    self.activeScene = self.introScene
 
     # make groups for sprites
 
@@ -285,9 +531,17 @@ class PygameView:
     """
     nextScene = None
     if event.button == "q":
-      nextScene = self.recScene
+      nextScene = self.sequencerScene
+    elif event.button == "i":
+      nextScene = self.introScene
+    elif event.button == "d":
+      nextScene = self.drumScene
     elif event.button == "r":
       nextScene = self.recScene
+    elif event.button == "t":
+      nextScene = self.loopScene
+    elif event.button == "s":
+      nextScene = self.synthScene
     elif event.button == "w":
       nextScene = self.synthScene
     else:
@@ -309,6 +563,5 @@ class PygameView:
       # its some other event lets
       # let the active sceen know
       self.activeScene.notify(event)
-
 
     
