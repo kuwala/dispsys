@@ -201,6 +201,8 @@ class KeyboardController:
             ev = ButtonPressedEvent("r")
           elif event.key == pygame.K_i:
             ev = ButtonPressedEvent("i")
+          elif event.key == pygame.K_m:
+            ev = ButtonPressedEvent("m")
           elif event.key == pygame.K_5:
             ev = ButtonPressedEvent(5)
           elif event.key == pygame.K_ESCAPE:

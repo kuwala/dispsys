@@ -130,9 +130,6 @@ class Sprite(pygame.sprite.Sprite):
   def update(self):
     pass
   
-
-
-
 class Scene(object):
   def __init__(self, screen, backgroundColor = (0,0,0) ):
     self.screen = screen
@@ -209,8 +206,6 @@ class ProgressBar(pygame.sprite.Sprite):
     pos = ( int(x), int(y) )
     pygame.draw.circle(self.image, self.color, pos, 4)
     """
-    
-
 class DrumScene(Scene):
   def __init__(self, screen):
     Scene.__init__(self, screen)
@@ -218,6 +213,106 @@ class DrumScene(Scene):
     label = Label("Drums", self.spriteGroup, 72, (255,127,255))
     label.name = "title_label"
     label.rect.topleft = (74,2)
+class GridSprite(pygame.sprite.Sprite):
+  def __init__(self, spriteGroup = None):
+    pygame.sprite.Sprite.__init__(self, spriteGroup)
+    self.w = 320
+    self.h = 240
+    self.image = pygame.Surface((self.w, self.h))
+    self.tColor = (255,0,0) # transparent color
+    self.image.set_colorkey(self.tColor)
+    self.image.fill( self.tColor )
+    #self.lineColor = (255,255,255)
+    self.lineColor = (32,32,32)
+    pos = (32,32)
+    pos2 = (64,64)
+    self.drawGrid32()
+    self.rect = self.image.get_rect()
+  def clearImage(self):
+    self.image.fill(tColor)
+  def drawGrid32(self):
+    cellSize = 32
+    rows = 1 + self.h / cellSize
+    cols = 1 + self.w / cellSize
+    for row in range(rows):
+      # draw each row
+      pos = (0, row * cellSize)
+      pos2 = (self.w, row * cellSize)
+      pygame.draw.line(self.image, self.lineColor, pos, pos2)
+
+    for col in range(cols):
+      # draw each collumn
+      pos = (col * cellSize, 0)
+      pos2 = (col * cellSize, self.h)
+      pygame.draw.line(self.image, self.lineColor, pos, pos2)
+
+class MoverScene(Scene):
+  def __init__(self, screen):
+    Scene.__init__(self, screen)
+  def setupComponents(self):
+    mbox = MoverBox(self.spriteGroup)
+    mbox.rect.topleft=(32,32)
+    grid = GridSprite(self.spriteGroup)
+    grid.rect.topleft=(0,0)
+
+class MoverBox(pygame.sprite.Sprite):
+  def __init__(self, spriteGroup = None):
+    pygame.sprite.Sprite.__init__(self, spriteGroup)
+    self.w = 128
+    self.h = 128
+    self.image = pygame.Surface((self.w, self.h)) 
+    self.bgColor = (32,0,32)
+    self.image.fill(self.bgColor)
+    self.rect = self.image.get_rect()
+    self.mover = RandMover()
+    self.mover.x = self.w/2
+    self.mover.y = self.h/2
+    self.mover.setBounds(self.w, self.h)
+
+  def update(self):
+    #move mover
+    self.mover.update()
+    self.drawMover()
+  def drawMover(self):
+    pos = ( self.mover.x, self.mover.y )
+    color = (127,0,32)
+    radius = 1
+
+    #pygame.draw.circle(self.image, color, pos, radius)
+    #self.image.fill(self.bgColor)
+    pygame.draw.line(self.image, color, pos, pos)
+    #draw on canvas
+
+class RandMover():
+  def __init__(self):
+    # x, y, stepsize
+    self.x = 0
+    self.y = 0
+    # max lcd size 320x240
+    self.maxW = 320
+    self.maxH = 240
+    self.stepSize = 1
+  def update(self):
+    chance = random.random()
+    if chance > 0.96:
+      self.x += random.randint(-1,1) * self.stepSize
+      self.y += random.randint(-1,1) * self.stepSize
+      self.checkBounds()
+
+  def checkBounds(self):
+    if self.x > self.maxW:
+      self.x -= self.maxW
+    elif self.x < 0:
+      self.x += self.maxW
+    if self.y > self.maxH:
+      self.y -= self.maxH
+    elif self.y < 0:
+      self.y += self.maxH
+
+  def setBounds(self,w,h):
+    self.maxW = w
+    self.maxH = h
+    
 
 class LooperModel():
   def __init__(self):
@@ -518,6 +613,7 @@ class PygameView:
     self.sequencerScene = SequencerScene(self.screen)
     self.loopScene = LoopScene(self.screen)
     self.recScene = RecScene(self.screen)
+    self.moverScene = MoverScene(self.screen)
 
     # current scene view
     # set intro scene as the first view
@@ -545,6 +641,8 @@ class PygameView:
       nextScene = self.synthScene
     elif event.button == "w":
       nextScene = self.synthScene
+    elif event.button == "m":
+      nextScene = self.moverScene
     else:
       # other event pass to scene
       self.activeScene.notify(event)
