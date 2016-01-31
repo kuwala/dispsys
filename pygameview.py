@@ -123,7 +123,7 @@ class ButtonCounterSprite(Button):
 class Sprite(pygame.sprite.Sprite):
   def __init__(self, group="none", fileName = "titleScreen320x240.png"):
     pygame.sprite.Sprite.__init__(self, group)
-    folder = 'assets'
+    folder = '/home/ccrma/pydispsys/assets'
     file = fileName
     self.image = pygame.image.load(os.path.join(folder, file)).convert()
     self.rect = self.image.get_rect()
