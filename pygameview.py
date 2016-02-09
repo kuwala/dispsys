@@ -1,6 +1,10 @@
 import pygame
 import os, random, string
 import events
+import oscSender
+
+def debug(txt):
+  print(txt)
 
 BLACK = (0,0,0)
 RED = (255,0,0)
@@ -247,13 +251,37 @@ class GridSprite(pygame.sprite.Sprite):
       pygame.draw.line(self.image, self.lineColor, pos, pos2)
 
 class MoverScene(Scene):
-  def __init__(self, screen):
+  def __init__(self, screen, evManager):
     Scene.__init__(self, screen)
+    self.evManager = evManager
+    #self.evManager.addListener(self)
+    self.oscSender = oscSender.OscSender()
   def setupComponents(self):
     mbox = MoverBox(self.spriteGroup)
     mbox.rect.topleft=(32,32)
     grid = GridSprite(self.spriteGroup)
     grid.rect.topleft=(0,0)
+  def routeButtonPressed(self, event):
+    if event.button == 1:
+      ev = events.NoteOutEvent(60)
+      self.evManager.post(ev)
+    if event.button == 2:
+      ev = events.NoteOutEvent(64)
+      self.evManager.post(ev)
+    if event.button == 3:
+      ev = events.NoteOutEvent(65)
+      self.evManager.post(ev)
+    if event.button == 4:
+      ev = events.NoteOutEvent(62)
+      self.evManager.post(ev)
+  def notify(self, event):
+    if isinstance(event, events.TickEvent):
+      self.clearUpdateDraw()
+    elif isinstance(event, events.NoteOutEvent):
+      self.oscSender.notify(event)
+      pass
+    elif isinstance(event, events.ButtonPressedEvent):
+      self.routeButtonPressed(event)
 
 class MoverBox(pygame.sprite.Sprite):
   def __init__(self, spriteGroup = None):
@@ -282,6 +310,7 @@ class MoverBox(pygame.sprite.Sprite):
     #self.image.fill(self.bgColor)
     pygame.draw.line(self.image, color, pos, pos)
     #draw on canvas
+
 
 class RandMover():
   def __init__(self):
@@ -312,7 +341,6 @@ class RandMover():
   def setBounds(self,w,h):
     self.maxW = w
     self.maxH = h
-    
 
 class LooperModel():
   def __init__(self):
@@ -588,24 +616,32 @@ class RecScene(Scene):
 
 class PygameView:
   def __init__(self, evManager):
+    debug('starting pygame view start')
     self.evManager = evManager
     self.evManager.addListener(self)
 
     # point the os video frame buffer to fb1
     # the LCD on the rpi is connect to this
+    # if missing it will default to default
     os.environ["SDL_FBDEV"]= "/dev/fb1"
-    pygame.init()
-    # turn off audio so that pd (puredata) can grab audio focus
-    pygame.mixer.quit()
+
+    # Note: pygame.mixer was competing with
+    # Puredata audio so dont initialize it
+
+    # Initialize pygame modules that I need
+    pygame.display.init()
+    pygame.font.init()
     # hide mouse coursor
     pygame.mouse.set_visible(False)
 
+    debug('starting pygame view set up screen')
     # setup screen surface
     self.screen = pygame.display.set_mode( (320, 240) )
     pygame.display.set_caption("Rpi Synth")
     self.background = pygame.Surface( self.screen.get_size() )
     self.background.fill( BLACK )
 
+    debug('starting pygame view init scnes')
     # Setup SceneViews
     self.introScene = IntroScene(self.screen)
     self.synthScene = SynthScene(self.screen)
@@ -613,13 +649,13 @@ class PygameView:
     self.sequencerScene = SequencerScene(self.screen)
     self.loopScene = LoopScene(self.screen)
     self.recScene = RecScene(self.screen)
-    self.moverScene = MoverScene(self.screen)
+    self.moverScene = MoverScene(self.screen, self.evManager)
 
     # current scene view
     # set intro scene as the first view
     self.activeScene = self.introScene
 
-    # make groups for sprites
+    debug('finished pygame view init scenes')
 
   def interpertButton(self, event):
     """ Change scenes when scene change buttons are pressed

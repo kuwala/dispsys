@@ -250,6 +250,10 @@ class NoteEvent(Event):
   def __init__(self, note):
     self.note = note
 
+class NoteOutEvent(Event):
+  def __init__(self, note):
+    self.note = note
+
 class ParamChangedEvent(Event):
   def __init__(self, name, value):
     self.name = name
