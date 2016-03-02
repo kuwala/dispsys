@@ -263,6 +263,9 @@ class RuntimeEvent(Event):
   def __init__(self, runtime):
     self.runtime = runtime
 
+class TimerFiredEvent(Event):
+  pass
+
 
 class QuitEvent(Event):
   pass

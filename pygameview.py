@@ -1,7 +1,10 @@
 import pygame
-import os, random, string
+import os
+import random
+import string
 import events
 import oscSender
+import time
 
 def debug(txt):
   print(txt)
@@ -47,10 +50,10 @@ class Label(pygame.sprite.Sprite):
 
   def updateImage(self):
     self.image = self.font.render(self.text, 1, self.color)
-    
+
   def update(self):
     pass
-  
+
   def changeText(self, text):
     self.text = str(text)
     self.updateImage()
@@ -65,7 +68,7 @@ class Button(pygame.sprite.Sprite):
   STATE_LIGHT = 1
   STATE_PAUSED = 2
   MAX_DIM_TIME = 10
-  
+
   def __init__(self, text="button", group=None):
     pygame.sprite.Sprite.__init__(self, group)
     self.text = text
@@ -112,7 +115,7 @@ class Button(pygame.sprite.Sprite):
       self.dimTimer += 1
     else :
       # Its not light or dim so its paused
-      pass 
+      pass
 
 class ButtonCounterSprite(Button):
   def __init__(self, text="0", group=None):
@@ -133,7 +136,7 @@ class Sprite(pygame.sprite.Sprite):
     self.rect = self.image.get_rect()
   def update(self):
     pass
-  
+
 class Scene(object):
   def __init__(self, screen, backgroundColor = (0,0,0) ):
     self.screen = screen
@@ -143,7 +146,7 @@ class Scene(object):
     self.setupComponents()
   def setupComponents(self):
     # create all the components here
-    # and add them to the spriteGroup 
+    # and add them to the spriteGroup
     button = Button("DefaultScene", self.spriteGroup)
     button.name = "DefaultButton"
     button.rect.topleft = ( 50, 50)
@@ -250,17 +253,57 @@ class GridSprite(pygame.sprite.Sprite):
       pos2 = (col * cellSize, self.h)
       pygame.draw.line(self.image, self.lineColor, pos, pos2)
 
+class Timer():
+  def __init__(self, parent):
+    self.last_time = 0
+    self.current_time = self.get_time()
+    self.max_time = 1000
+    self.parent = parent
+  def get_time(self):
+    # time in milliseconds
+    return int(round(time.clock() * 1000))
+  def notify(self, event):
+    if isinstance(event, events.TickEvent):
+      # Compare the difference between current_time
+      # and last_timer. If its more than max_time
+      # then the timer event is fired
+      self.current_time = self.get_time()
+      delta_time = self.current_time - self.last_time
+      if delta_time >= self.max_time:
+        # fire trigger here
+        ev = events.TimerFiredEvent()
+        self.parent.notify(ev)
+        # reset last_time triggered
+        self.last_time = self.current_time
+
+class NoteList():
+  def __init__(self, notes=[42,56]):
+    self.notes= notes
+    self.index = 0
+    if self.notes.len > 0:
+      self.currentNote = notes[self.index]
+  def getNextNote(self, nextPos=1):
+    self.index += nextPos
+    # wrap around to the start of the list
+    # if the index is grater then list length
+    if self.index >= self.notes.len:
+      self.index = self.index % self.notes.len
+    self.currentNote = self.notes[self.index]
+    return currentNote
+
 class MoverScene(Scene):
   def __init__(self, screen, evManager):
     Scene.__init__(self, screen)
     self.evManager = evManager
     #self.evManager.addListener(self)
     self.oscSender = oscSender.OscSender()
+    self.noteList = NoteList([60,62,64,65])
   def setupComponents(self):
     mbox = MoverBox(self.spriteGroup)
     mbox.rect.topleft=(32,32)
     grid = GridSprite(self.spriteGroup)
     grid.rect.topleft=(0,0)
+    self.timer = Timer(self)
   def routeButtonPressed(self, event):
     if event.button == 1:
       ev = events.NoteOutEvent(60)
@@ -277,9 +320,19 @@ class MoverScene(Scene):
   def notify(self, event):
     if isinstance(event, events.TickEvent):
       self.clearUpdateDraw()
+      self.timer.notify(event)
     elif isinstance(event, events.NoteOutEvent):
       self.oscSender.notify(event)
-      pass
+    elif isinstance(event, events.TimerFiredEvent):
+      print("ddsdsdsds")
+      #kurt is a cool guy
+      llalala
+      #debug("timer fired")
+      #debug(time.time())
+      #debug(time.clock())
+      ev = events.NoteOutEvent(64)
+      self.evManager.post(ev)
+
     elif isinstance(event, events.ButtonPressedEvent):
       self.routeButtonPressed(event)
 
@@ -288,7 +341,7 @@ class MoverBox(pygame.sprite.Sprite):
     pygame.sprite.Sprite.__init__(self, spriteGroup)
     self.w = 128
     self.h = 128
-    self.image = pygame.Surface((self.w, self.h)) 
+    self.image = pygame.Surface((self.w, self.h))
     self.bgColor = (32,0,32)
     self.image.fill(self.bgColor)
     self.rect = self.image.get_rect()
@@ -367,7 +420,7 @@ class LoopScene(Scene):
     label = Label("Looper", self.spriteGroup, 72, (255,127,127))
     label.name = "title_label"
     label.rect.topleft = (64,2)
-    
+
     # progress bar
     progressBar = ProgressBar(self.spriteGroup, 192)
     progressBar.name = "loop_progress_bar"
@@ -698,5 +751,3 @@ class PygameView:
       # its some other event lets
       # let the active sceen know
       self.activeScene.notify(event)
-
-    
