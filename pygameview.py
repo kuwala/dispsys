@@ -1,18 +1,33 @@
+"""This is a module for displaying visuals and UI from rpi synth.
+
+It uses pygame as the view and pyOSC as the communication with the Puredata
+synth program.
+"""
 import pygame
 import os
 import random
-import string
+# import string
 import events
 import oscSender
 import time
 
-def debug(txt):
-  print(txt)
 
-BLACK = (0,0,0)
-RED = (255,0,0)
-REDPINK = (255,127,127)
-WHITE = (255,255,255)
+debug_on = False
+def debug(txt):
+  if debug_on:
+    print(txt)
+
+def debugException():
+  if debug_on:
+    print("***Exception error start***")
+    print(sys.exc_info()[0])
+    print(sys.exc_info()[1])
+    print("***Exception error end***")
+
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+REDPINK = (255, 127, 127)
+WHITE = (255, 255, 255)
 
 """ # This is premature optimization
 # Unique component idNames
@@ -31,10 +46,13 @@ REC_SWITCH_BUTTON = 1005
 REC_RUNTIME_LABEL = 1006
 """
 
+
 class Label(pygame.sprite.Sprite):
-  # Just a simple text label. you
-  # can changeText or changeColor
-  def __init__(self, text="label",group=None, size=30, color=(255,255,255) ):
+  """Just a simple text label.you
+  can changeText or changeColor.
+  """
+
+  def __init__(self, text="label", group=None, size=30, color=(255, 255, 255)):
     pygame.sprite.Sprite.__init__(self, group)
     self.text = text
     self.idName = "NotYet"
@@ -47,7 +65,6 @@ class Label(pygame.sprite.Sprite):
 
   def setID(self, idName):
     self.idName = idName
-
   def updateImage(self):
     self.image = self.font.render(self.text, 1, self.color)
 
@@ -61,6 +78,7 @@ class Label(pygame.sprite.Sprite):
   def changeColor(self, color):
     self.color = color
     self.updateImage()
+
 
 class Button(pygame.sprite.Sprite):
   # [ Play ]
@@ -108,12 +126,12 @@ class Button(pygame.sprite.Sprite):
       if self.dimTimer < Button.MAX_DIM_TIME:
         ratePerFrame = 25
         c = 255 - self.dimTimer * ratePerFrame
-        self.color = ( c, c, c)
+        self.color = (c, c, c)
         self.updateImage()
-      else :
+      else:
         self.state = Button.STATE_DIM
       self.dimTimer += 1
-    else :
+    else:
       # Its not light or dim so its paused
       pass
 
@@ -180,7 +198,7 @@ class ProgressBar(pygame.sprite.Sprite):
   def __init__(self, spriteGroup = None, width = 64):
     pygame.sprite.Sprite.__init__(self, spriteGroup)
     self.value = .5
-    self.bgColor = (64,64,64)
+    self.bgColor = (64, 64, 64)
     self.color = (255,255,255)
     self.width = width
     self.height = 2
@@ -257,7 +275,7 @@ class Timer():
   def __init__(self, parent):
     self.last_time = 0
     self.current_time = self.get_time()
-    self.max_time = 1000
+    self.max_time = 175
     self.parent = parent
   def get_time(self):
     # time in milliseconds
@@ -280,29 +298,32 @@ class NoteList():
   def __init__(self, notes=[42,56]):
     self.notes= notes
     self.index = 0
-    if self.notes.len > 0:
+    if len(self.notes) > 0:
       self.currentNote = notes[self.index]
   def getNextNote(self, nextPos=1):
     self.index += nextPos
     # wrap around to the start of the list
     # if the index is grater then list length
-    if self.index >= self.notes.len:
-      self.index = self.index % self.notes.len
+    if self.index >= len(self.notes):
+      self.index = self.index % len(self.notes)
     self.currentNote = self.notes[self.index]
-    return currentNote
+    return self.currentNote
 
 class MoverScene(Scene):
   def __init__(self, screen, evManager):
     Scene.__init__(self, screen)
     self.evManager = evManager
+    # dont want it receiving TickEvent not from PygameView
     #self.evManager.addListener(self)
     self.oscSender = oscSender.OscSender()
     self.noteList = NoteList([60,62,64,65])
   def setupComponents(self):
-    mbox = MoverBox(self.spriteGroup)
-    mbox.rect.topleft=(32,32)
-    grid = GridSprite(self.spriteGroup)
-    grid.rect.topleft=(0,0)
+    self.mbox = MoverBox(self.spriteGroup)
+    self.mbox.rect.topleft=(32,32)
+    self.grid = GridSprite(self.spriteGroup)
+    self.grid.rect.topleft=(0,0)
+    self.noteLabel = Label("hi", self.spriteGroup)
+    self.noteLabel.rect.topleft=(132,32)
     self.timer = Timer(self)
   def routeButtonPressed(self, event):
     if event.button == 1:
@@ -320,17 +341,18 @@ class MoverScene(Scene):
   def notify(self, event):
     if isinstance(event, events.TickEvent):
       self.clearUpdateDraw()
-      self.timer.notify(event)
+      if not self.timer == None:
+        self.timer.notify(event)
     elif isinstance(event, events.NoteOutEvent):
       self.oscSender.notify(event)
     elif isinstance(event, events.TimerFiredEvent):
-      print("ddsdsdsds")
-      #kurt is a cool guy
-      llalala
-      #debug("timer fired")
-      #debug(time.time())
-      #debug(time.clock())
-      ev = events.NoteOutEvent(64)
+      # debug("timer fired")
+      # Timer is fired so update the label text
+      # then create an event to be sent to oscSender
+
+      note = self.noteList.getNextNote()
+      self.noteLabel.changeText(note)
+      ev = events.NoteOutEvent(note)
       self.evManager.post(ev)
 
     elif isinstance(event, events.ButtonPressedEvent):
@@ -420,11 +442,24 @@ class LoopScene(Scene):
     label = Label("Looper", self.spriteGroup, 72, (255,127,127))
     label.name = "title_label"
     label.rect.topleft = (64,2)
+    # Play Rec Stop Switch
+    button = Button("Play", self.spriteGroup)
+    button.name = "play"
+    button.rect.topleft = (16, 200)
+    button = Button("Record", self.spriteGroup)
+    button.name = "record"
+    button.rect.topleft = (72, 200)
+    button = Button("Stop", self.spriteGroup)
+    button.name = "stop"
+    button.rect.topleft = (164, 200)
+    button = Button("Erase", self.spriteGroup)
+    button.name = "erase"
+    button.rect.topleft = (232, 200)
 
     # progress bar
     progressBar = ProgressBar(self.spriteGroup, 192)
     progressBar.name = "loop_progress_bar"
-    progressBar.rect.topleft = ( 62, 212 )
+    progressBar.rect.topleft = ( 62, 184 )
 
     # Play/Stop/Rec Button
     label = Label("Play", self.spriteGroup)
@@ -435,6 +470,19 @@ class LoopScene(Scene):
     component = None
     component = self.getCompByName("loop_progress_bar")
     component.setValue(event.runtime)
+
+  def routeButtonEvent(self, event):
+    buttonSprite = None
+    if event.button == 1:
+      buttonSprite = self.getCompByName("play")
+    elif event.button == 2:
+      buttonSprite = self.getCompByName("record")
+    elif event.button == 3:
+      buttonSprite = self.getCompByName("stop")
+    elif event.button == 4:
+      buttonSprite = self.getCompByName("erase")
+    if buttonSprite:
+      buttonSprite.pressed()
 
   def routeLooperStateEvent(self, event):
     if not self.looperModel.state == event.state:
@@ -450,6 +498,8 @@ class LoopScene(Scene):
   def notify(self, event):
     if isinstance(event, events.TickEvent):
       self.clearUpdateDraw()
+    elif isinstance(event, events.ButtonPressedEvent):
+      self.routeButtonEvent(event)
     elif isinstance(event, events.RuntimeEvent):
       self.routeRuntimeEvent(event)
     elif isinstance(event, events.LooperStateEvent):
@@ -670,6 +720,7 @@ class RecScene(Scene):
 class PygameView:
   def __init__(self, evManager):
     debug('starting pygame view start')
+    # self.activeScene = None
     self.evManager = evManager
     self.evManager.addListener(self)
 
@@ -727,7 +778,8 @@ class PygameView:
     elif event.button == "t":
       nextScene = self.loopScene
     elif event.button == "s":
-      nextScene = self.synthScene
+      #nextScene = self.synthScene
+      pass
     elif event.button == "w":
       nextScene = self.synthScene
     elif event.button == "m":
@@ -738,16 +790,20 @@ class PygameView:
 
     if not nextScene == None:
       if not nextScene == self.activeScene:
+        # exit current scene and move to next
+        # self.activeScene.exitScene()
         self.activeScene = nextScene
         self.activeScene.clearScreen()
 
   def notify(self, event):
     if isinstance( event, events.TickEvent):
-      self.activeScene.notify(event)
+      if not self.activeScene == None:
+        self.activeScene.notify(event)
     elif isinstance( event, events.ButtonPressedEvent):
       # self.updateButton(event)
       self.interpertButton(event)
     else :
       # its some other event lets
       # let the active sceen know
-      self.activeScene.notify(event)
+      if not self.activeScene == None:
+        self.activeScene.notify(event)

@@ -1,12 +1,22 @@
 from pygameview import PygameView
 import pygame
 import events
+import sys
 
 from oscServ import oscServerGuy
 from models import synthState
 
+debug_on = False
 def debug(txt):
-  print(txt)
+  if debug_on:
+    print(txt)
+
+def debugException():
+  if debug_on:
+    print("***Exception error start***")
+    print(sys.exc_info()[0])
+    print(sys.exc_info()[1])
+    print("***Exception error end***")
 
 print("Pygame RpiSynth Display")
 print("Made by: Daniel")
@@ -22,7 +32,8 @@ try:
   oscGuy = oscServerGuy(savedOSC)
   debug("osc server started")
 except:
-  print("something wrong with pygame osc server")
+  debug("something wrong with pygame osc server")
+  debugException()
 
 evManager = events.EventManager()
 
@@ -33,17 +44,16 @@ keyboardController = events.KeyboardController(evManager)
 debug("Starting cpu spinner")
 cpuSpinner = events.CPUSpinner(evManager)
 
-try:
-  debug("creating pygame view")
-  view = PygameView(evManager)
-except:
-  debug("pygame view create failed")
+debug("creating pygame view")
+view = PygameView(evManager)
 
 # run the visuals as fast as possible
 # but catch KeyboardInterrupt as to not
 # leave the OSC thread hanging when force closed
 
 try :
+  # start the while loop that runs untill close
+  # and does eventManager.Post(CPUTickEvent())
   cpuSpinner.run()
 except KeyboardInterrupt:
   evManager.post(events.QuitEvent())
@@ -52,4 +62,5 @@ try:
   oscGuy.close()
 except:
   debug("failed to close oscGuy")
+  debugException()
 print("Pygame RpiSynth Shutdown")

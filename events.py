@@ -2,9 +2,17 @@ from OSC import OSCServer
 import threading, string
 import pygame
 
-def debug(text):
-  #print(text)
-  pass
+debug_on = False
+def debug(txt):
+  if debug_on:
+    print(txt)
+
+def debugException():
+  if debug_on:
+    print("***Exception error start***")
+    print(sys.exc_info()[0])
+    print(sys.exc_info()[1])
+    print("***Exception error end***")
 
 class OSCController:
   """ Checks the SavedOSC for a hot msg
